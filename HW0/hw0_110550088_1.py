@@ -1,7 +1,7 @@
 import cv2 
 
-img_path = "data/image.png"
-txt_path = "data/bounding_box.txt"
+img_path = "image.png"
+txt_path = "bounding_box.txt"
 
 img = cv2.imread(img_path)
 lines = []
@@ -21,3 +21,6 @@ for line in lines:
 
 
 cv2.imwrite("hw0_110550088_1.png", img)
+cv2.imshow("Result", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
