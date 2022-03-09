@@ -5,3 +5,5 @@ __pycache__
 .ipynb_checkpoints
 .DS_Store
 results.gif
+_minted-hw1
+*.pygtex

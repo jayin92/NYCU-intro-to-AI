@@ -1,0 +1,119 @@
+\documentclass{article}[12pt]
+\usepackage{fontspec}   %加這個就可以設定字體
+\usepackage{xeCJK}       %讓中英文字體分開設置
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage[newfloat]{minted}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+
+
+\usepackage[breakable, listings, skins, minted]{tcolorbox}
+\usepackage{etoolbox}
+
+\renewtcblisting{minted}{%
+    listing engine=minted,
+    minted language=python,
+    listing only,
+    breakable,
+    enhanced,
+    minted options = {
+        linenos, 
+        breaklines=true, 
+        breakbefore=., 
+        % fontsize=\footnotesize, 
+        numbersep=2mm
+    },
+    overlay={%
+        \begin{tcbclipinterior}
+            \fill[gray!25] (frame.south west) rectangle ([xshift=4mm]frame.north west);
+        \end{tcbclipinterior}
+    }   
+}
+
+\usepackage[
+  top=2cm,
+  bottom=2cm,
+  left=2cm,
+  right=2cm,
+  headheight=17pt, % as per the warning by fancyhdr
+  includehead,includefoot,
+  heightrounded, % to avoid spurious underfull messages
+]{geometry} 
+
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Code}
+
+
+\title{Introduction to Artificial Intelligence HW 1 Report}
+\author{110550088 李杰穎}
+\date{\today}
+
+\setCJKmainfont{Noto Serif TC}
+\setmonofont[Mapping=tex-text]{CascadiaMono.ttf}
+
+\XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
+\XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{2em}
+\renewcommand{\baselinestretch}{1.5}
+\begin{document}
+
+\maketitle
+
+\section{Code and Explanation}
+\begin{code}
+\captionof{listing}{Part 1 (\texttt{datasets.py})}
+\begin{minted}
+import os
+import cv2
+import numpy as np
+def loadImages(dataPath):
+    """
+    Load all Images in the folder and transfer a list of tuples. 
+    The first element is the numpy array of shape (m, n) representing the image.
+    (remember to resize and convert the parking space images to 36 x 16 grayscale images.) 
+    The second element is its classification (1 or 0)
+        Parameters:
+        dataPath: The folder path.
+        Returns:
+        dataset: The list of tuples.
+    """
+    # Begin your code (Part 1)
+    dataset = []
+    for item in os.listdir(os.path.join(dataPath, "car")):
+        img = cv2.imread(os.path.join(dataPath, "car", item))
+        img = cv2.resize(img, (36, 16))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        data = (img, 1)
+        dataset.append(data)
+    
+    for item in os.listdir(os.path.join(dataPath, "non-car")):
+        img = cv2.imread(os.path.join(dataPath, "non-car", item))
+        img = cv2.resize(img, (36, 16))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        data = (img, 0)
+        dataset.append(data)
+    # End your code (Part 1)
+    
+    return dataset
+    
+\end{minted}
+\end{code}
+\section{Results}
+
+\section{Problems}
+\subsection{The Performance of My Model is really bad}
+
+
+
+\end{document}
