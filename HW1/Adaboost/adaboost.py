@@ -62,6 +62,7 @@ class Adaboost:
             #update weights
             accuracy = []
             for x, y in zip(iis, labels):
+                print(clf.classify(x), y)
                 correctness = abs(clf.classify(x) - y)
                 accuracy.append(correctness)
             beta = error / (1.0 - error)

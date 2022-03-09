@@ -15,17 +15,17 @@ def loadImages(dataPath):
     # Begin your code (Part 1)
     dataset = []
     for item in os.listdir(os.path.join(dataPath, "car")):
-        img = cv2.imread(os.path.join(dataPath, "car", item), cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread(os.path.join(dataPath, "car", item))
         img = cv2.resize(img, (16, 36))
         img = np.transpose(img)
-        data = (img, 1)
+        data = (img[0], 1)
         dataset.append(data)
     
     for item in os.listdir(os.path.join(dataPath, "non-car")):
-        img = cv2.imread(os.path.join(dataPath, "non-car", item), cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread(os.path.join(dataPath, "non-car", item))
         img = cv2.resize(img, (16, 36))
         img = np.transpose(img)
-        data = (img, 0)
+        data = (img[0], 0)
         dataset.append(data)
     # End your code (Part 1)
     
