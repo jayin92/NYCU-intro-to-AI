@@ -1,2 +1,5 @@
 data
 *.zip
+*.mp4
+image.png
+bounding_box.txt
