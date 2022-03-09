@@ -1,9 +1,11 @@
 import os
+import re
 from turtle import Turtle
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import utils
+import imageio
 from os import walk
 from os.path import join
 from datetime import datetime
@@ -56,5 +58,36 @@ def detect(dataPath, clf):
         No returns.
     """
     # Begin your code (Part 4)
-    raise NotImplementedError("To be implemented")
+    cords = []
+    with open(dataPath) as file:
+        num_of_parking = int(file.readline())
+        for _ in range(num_of_parking):
+            tmp = file.readline()
+            tmp = tmp.split(" ")
+            res = tuple(map(int, tmp))
+            cords.append(res)
+    cap = cv2.VideoCapture(os.path.join(dataPath, "..", "video.gif"))
+    frame = 0
+    output_gif = []
+    while True:
+        detect_label = []
+        frame += 1
+        print(f"frame: {frame}")
+        _, img = cap.read()
+        if img is None:
+            break
+        for cord in cords:
+            pic = crop(*cord, img)
+            pic = cv2.resize(pic, (36, 16))
+            pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY)
+            detect_label.append(clf.classify(pic))
+        for i, label in enumerate(detect_label):
+            if label:
+                pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)]
+                pos[2], pos[3] = pos[3], pos[2]
+                pos = np.array(pos, np.int32)
+                cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
+    
+        output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    imageio.mimsave('results.gif', output_gif, fps=2)
     # End your code (Part 4)

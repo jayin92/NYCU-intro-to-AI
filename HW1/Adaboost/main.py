@@ -24,11 +24,12 @@ plt.show()
 # Part 2: Implement selectBest function in adaboost.py and test the following code.
 # Part 3: Modify difference values at parameter T of the Adaboost algorithm.
 # And find better results. Please test value 1~10 at least.
-print('Start training your classifier')
-clf = adaboost.Adaboost(T=10)
-clf.train(trainData)
 
-clf.save('clf_300_1_10')
+# print('Start training your classifier')
+# clf = adaboost.Adaboost(T=10)
+# clf.train(trainData)
+
+# clf.save('clf_300_1_10')
 clf = adaboost.Adaboost.load('clf_300_1_10')
 
 print('\nEvaluate your classifier with training dataset')

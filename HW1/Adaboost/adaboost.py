@@ -62,7 +62,6 @@ class Adaboost:
             #update weights
             accuracy = []
             for x, y in zip(iis, labels):
-                print(clf.classify(x), y)
                 correctness = abs(clf.classify(x) - y)
                 accuracy.append(correctness)
             beta = error / (1.0 - error)
@@ -151,8 +150,6 @@ class Adaboost:
             bestError: The error of the best classifer
         """
         # Begin your code (Part 2)
-        print(weights.shape)
-        print(features.shape)
         clfs = [WeakClassifier(feature=feature) for feature in features]
         
         bestClf = None
