@@ -150,19 +150,22 @@ class Adaboost:
             bestError: The error of the best classifer
         """
         # Begin your code (Part 2)
+        # Init. WeakClassifier by the feature in features list
+        # And append them all into the clfs list
         clfs = [WeakClassifier(feature=feature) for feature in features]
         
+        # Declare bestClf and bestError to store the currently best classifier and its error
         bestClf = None
-        bestError = sum(weights)
+        bestError = sum(weights) # The max error is the sum of weights
 
-        for clf in clfs:
-            error = 0
-            for i in range(len(iis)):
-                if clf.classify(iis[i]) != labels[i]:
-                    error += weights[i]
-            if error < bestError:
-                bestError = error
-                bestClf = clf
+        for clf in clfs: # Iterate all classifer in clfs
+            error = 0    # Declare a variable to track the error of the current clf
+            for i in range(len(iis)): # Iterate all image sample
+                if clf.classify(iis[i]) != labels[i]: # When the prediction of the model is different with the lable
+                    error += weights[i] # Add weights to error
+            if error < bestError: # If the error is smaller than the best error, then classifier is the currently best classifer
+                bestError = error # Change bestError to current error
+                bestClf = clf     # Save this classifier as bestClf
 
         # End your code (Part 2)
         return bestClf, bestError

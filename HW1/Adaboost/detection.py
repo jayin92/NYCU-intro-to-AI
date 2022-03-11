@@ -41,7 +41,7 @@ def crop(x1, y1, x2, y2, x3, y3, x4, y4, img) :
     return croped
 
 
-def detect(dataPath, clf):
+def detect(dataPath, clf, t=10):
     """
     Please read detectData.txt to understand the format. 
     Use cv2.VideoCapture() to load the video.gif.
@@ -89,5 +89,5 @@ def detect(dataPath, clf):
                 cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
     
         output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    imageio.mimsave('results.gif', output_gif, fps=2)
+    imageio.mimsave(f'results_{t}.gif', output_gif, fps=2)
     # End your code (Part 4)
