@@ -89,30 +89,118 @@ def loadImages(dataPath):
         dataset: The list of tuples.
     """
     # Begin your code (Part 1)
-    dataset = []
-    for item in os.listdir(os.path.join(dataPath, "car")):
-        img = cv2.imread(os.path.join(dataPath, "car", item))
-        img = cv2.resize(img, (36, 16))
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        data = (img, 1)
-        dataset.append(data)
+    dataset = [] # Declare an empty list to save the grayscale images
+
+    # Process images in "car" directory
+    for item in os.listdir(os.path.join(dataPath, "car")): # Use os.path.join to generate paths
+        img = cv2.imread(os.path.join(dataPath, "car", item)) # Read image from files
+        img = cv2.resize(img, (36, 16)) # Resize the image from (360, 160) to (36, 16)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) # Convert image to grayscale image
+        data = (img, 1) # Create a tuple to store image and label and 
+        # because all images in "car" folder is the occupied parking space, the label is set to 1
+        dataset.append(data) # Append the tuple to the dataset list
     
-    for item in os.listdir(os.path.join(dataPath, "non-car")):
+    for item in os.listdir(os.path.join(dataPath, "non-car")): # Do the same thing as above but this time is for "non-car" folder
         img = cv2.imread(os.path.join(dataPath, "non-car", item))
         img = cv2.resize(img, (36, 16))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        data = (img, 0)
+        data = (img, 0) # Not occupied parking space, label is set to 0
         dataset.append(data)
     # End your code (Part 1)
     
     return dataset
-    
+
+\end{minted}
+\end{code}
+
+\begin{code}
+\captionof{listing}{Part 2 (\texttt{adaboost.py/selectBest})}
+\begin{minted}
+def selectBest(self, featureVals, iis, labels, features, weights):
+"""
+Finds the appropriate weak classifier for each feature.
+Selects the best weak classifier for the given weights.
+    Parameters:
+    featureVals: A numpy array of shape (len(features), len(dataset)).
+        Each row represents the values of a single feature for each training sample.
+    iis: A list of numpy array with shape (m, n) representing the integral images.
+    labels: A list of integer.
+        The ith element is the classification of the ith training sample.
+    features: A numpy array of HaarFeature class.
+    weights: A numpy array with shape(len(dataset)).
+        The ith element is the weight assigned to the ith training sample.
+    Returns:
+    bestClf: The best WeakClassifier Class
+    bestError: The error of the best classifer
+"""
+# Begin your code (Part 2)
+# Init. WeakClassifier by the feature in features list
+# And append them all into the clfs list
+clfs = [WeakClassifier(feature=feature) for feature in features]
+
+# Declare bestClf and bestError to store the currently best classifier and its error
+bestClf = None
+bestError = sum(weights) # The max error is the sum of weights
+
+for clf in clfs: # Iterate all classifer in clfs
+    error = 0    # Declare a variable to track the error of the current clf
+    for i in range(len(iis)): # Iterate all image sample
+        if clf.classify(iis[i]) != labels[i]: # When the prediction of the model is different with the lable
+            error += weights[i] # Add weights to error
+    if error < bestError: # If the error is smaller than the best error, then classifier is the currently best classifer
+        bestError = error # Change bestError to current error
+        bestClf = clf     # Save this classifier as bestClf
+
+# End your code (Part 2)
+return bestClf, bestError
 \end{minted}
 \end{code}
 \section{Results}
+\subsection{Measurements}
+\subsubsection{Accuracy}
+In binary classification problem, we often define four kinds of accuracy, 
+which are True Positive, True Negative, False Positive and False Negative 
+to show the performance of classifiers. Their definitions are written below:
+\begin{itemize}
+    \item True Positive (TP): The real label is \textbf{true}, 
+    and our model predicts that it's \textbf{true}.
+    \item True Negative (TN): The real label is \textbf{false}, 
+    and our model predicts that it's \textbf{false}.
+    \item False Positive (FP): The real label is \textbf{true}, 
+    but our model predicts that it's \textbf{false}.
+    \item False Negative (FN): The real label is \textbf{false}, 
+    but our model predicts that it's \textbf{true}.
+\end{itemize}
+\subsubsection{F-Score}
+F-score is used to measure a test's accuracy. 
+To define F-score, we first need to define two variables, 
+``precision'' and ``recall''.
+
+\begin{equation}
+    \text {precision}=\frac{\text{TP}}{\text{TP}+\text{FP}}
+\end{equation}
+
+\begin{equation}
+    \text {recall}=\frac{\text{TP}}{\text{TP}+\text{FN}}
+\end{equation}
+
+And the definition of F-score is:
+
+\begin{equation}
+    \text {F-score}=\frac{\left(1+\beta^{2}\right) \text { precision } \times \text { recall }}{\beta^{2} \text { precision }+\text { recall }}
+\end{equation}
+
+In reality, we often use ``F1-score'', which means $\beta=1$. So the ``F1-score'' can be written as:
+\begin{equation}
+    \text {F1-score}=2 \times \frac{\text { precision } \times \text { recall }}{\text { precision }+\text { recall }}
+\end{equation}
+
+The range of F1-score is $[0, 1]$. If F1-score is higher (closer to 1), 
+then the performance of classifer is better.
 
 \section{Problems}
-\subsection{The Performance of My Model is really bad}
+\subsection{alpha = math.log(1.0/beta) ValueError: math domain error}
+\subsection{The model has bad performance}
 
 
 
