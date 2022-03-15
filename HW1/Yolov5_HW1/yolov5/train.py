@@ -62,6 +62,8 @@ RANK = int(os.getenv('RANK', -1))
 WORLD_SIZE = int(os.getenv('WORLD_SIZE', 1))
 
 
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
 def train(hyp,  # path/to/hyp.yaml or hyp dictionary
           opt,
           device,

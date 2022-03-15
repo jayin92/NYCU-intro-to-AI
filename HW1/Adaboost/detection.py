@@ -69,6 +69,7 @@ def detect(dataPath, clf, t=10):
     cap = cv2.VideoCapture(os.path.join(dataPath, "..", "video.gif"))
     frame = 0
     output_gif = []
+    first_frame = True
     while True:
         detect_label = []
         frame += 1
@@ -89,5 +90,20 @@ def detect(dataPath, clf, t=10):
                 cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
     
         output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        if first_frame:
+            first_frame = False
+            cv2.imwrite(f"Adaboost_first_frame_{t}.png", img)
+        with open(f"Adaboost_pred_{t}.txt", "a") as txt:
+            res = ""
+            for i, label in enumerate(detect_label):
+                if label:
+                    res += "1"
+                else:
+                    res += "0"
+                if i != len(detect_label) - 1:
+                    res += " "
+                else:
+                    res += "\n"
+            txt.write(res)
     imageio.mimsave(f'results_{t}.gif', output_gif, fps=2)
     # End your code (Part 4)

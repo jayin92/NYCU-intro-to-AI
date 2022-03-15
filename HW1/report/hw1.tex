@@ -155,6 +155,116 @@ for clf in clfs: # Iterate all classifer in clfs
 return bestClf, bestError
 \end{minted}
 \end{code}
+
+
+\begin{code}
+\captionof{listing}{Part 4 (\texttt{detection.py/detect})}
+\begin{minted}
+    def detect(dataPath, clf, t=10):
+    """
+    Please read detectData.txt to understand the format. 
+    Use cv2.VideoCapture() to load the video.gif.
+    Use crop() to crop each frame (frame size = 1280 x 800) of video to get parking space images. (image size = 360 x 160) 
+    Convert each parking space image into 36 x 16 and grayscale.
+    Use clf.classify() function to detect car, If the result is True, draw the green box on the image like the example provided on the spec. 
+    Then, you have to show the first frame with the bounding boxes in your report.
+    Save the predictions as .txt file (Adaboost_pred.txt), the format is the same as GroundTruth.txt. 
+    (in order to draw the plot in Yolov5_sample_code.ipynb)
+    
+      Parameters:
+        dataPath: the path of detectData.txt
+      Returns:
+        No returns.
+    """
+    # Begin your code (Part 4)
+    cords = []
+    with open(dataPath) as file:
+        num_of_parking = int(file.readline())
+        for _ in range(num_of_parking):
+            tmp = file.readline()
+            tmp = tmp.split(" ")
+            res = tuple(map(int, tmp))
+            cords.append(res)
+    cap = cv2.VideoCapture(os.path.join(dataPath, "..", "video.gif"))
+    frame = 0
+    output_gif = []
+    while True:
+        detect_label = []
+        frame += 1
+        print(f"frame: {frame}")
+        _, img = cap.read()
+        if img is None:
+            break
+        for cord in cords:
+            pic = crop(*cord, img)
+            pic = cv2.resize(pic, (36, 16))
+            pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY)
+            detect_label.append(clf.classify(pic))
+        for i, label in enumerate(detect_label):
+            if label:
+                pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)]
+                pos[2], pos[3] = pos[3], pos[2]
+                pos = np.array(pos, np.int32)
+                cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
+    
+        output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    imageio.mimsave(f'results_{t}.gif', output_gif, fps=2)
+    # End your code (Part 4)
+\end{minted}
+\end{code}
+
+\begin{code}
+\captionof{listing}{Part 5 (\texttt{yolov5\_sample\_code.ipynb})}
+\begin{minted}
+dataPath = os.path.join("HW1_material", "detect", "detectData.txt")
+cords = []
+with open(dataPath) as file:
+    num_of_parking = int(file.readline())
+    for _ in range(num_of_parking):
+        tmp = file.readline()
+        tmp = tmp.split(" ")
+        res = tuple(map(int, tmp))
+        cords.append(res)
+cap = cv2.VideoCapture(os.path.join("HW1_material", "detect", "video.gif"))
+frame = 0
+output_gif = []
+first_frame = True
+while True:
+    detect_label = []
+    frame += 1
+    print(f"frame: {frame}")
+    _, img = cap.read()
+    if img is None:
+        break
+    for cord in cords:
+        pic = crop(*cord, img)
+        pic = cv2.resize(pic, (36, 16))
+        detect_label.append(yolov5_func.classify(pic, weight_path, confidence_threshold, (36, 16)))
+    for i, label in enumerate(detect_label):
+        if label:
+            pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)]
+            pos[2], pos[3] = pos[3], pos[2]
+            pos = np.array(pos, np.int32)
+            cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
+    if first_frame:
+        cv2.imwrite(img_save_path, img)
+        first_frame = False
+    output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    with open(txt_save_path, "a") as txt:
+        res = ""
+        for i, label in enumerate(detect_label):
+            if label:
+                res += "1"
+            else:
+                res += "0"
+            if i != len(detect_label) - 1:
+                res += " "
+            else:
+                res += "\n"
+        txt.write(res)
+imageio.mimsave(f'results.gif', output_gif, fps=2)
+\end{minted}
+\end{code}
 \section{Results}
 \subsection{Measurements}
 \subsubsection{Accuracy}

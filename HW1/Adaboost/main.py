@@ -3,6 +3,14 @@ import adaboost
 import utils
 import detection
 import matplotlib.pyplot as plt
+import argparse
+
+import argparse
+parser = argparse.ArgumentParser()
+
+parser.add_argument("-t",
+                    type=int, default=10)
+args = parser.parse_args()
 
 # Part 1: Implement loadImages function in dataset.py and test the following code.
 print('Loading images')
@@ -25,24 +33,27 @@ print(f'The number of test samples loaded: {len(testData)}')
 # Part 3: Modify difference values at parameter T of the Adaboost algorithm.
 # And find better results. Please test value 1~10 at least.
 
+
+
 print('Start training your classifier')
 clfs = []
-for t in range(1, 11):
-    print(f"Training with T={t}")
-    clf = adaboost.Adaboost(T=t)
-    clf.train(trainData)
-    clf.save(f'clf_300_{t}')
-    clf = adaboost.Adaboost.load(f'clf_300_{t}')
+# for t in range(1, 11):
+t = args.t
+print(f"Training with T={t}")
+clf = adaboost.Adaboost(T=t)
+clf.train(trainData)
+clf.save(f'clf_300_{t}')
+clf = adaboost.Adaboost.load(f'clf_300_{t}')
 
-    print('\nEvaluate your classifier with training dataset')
-    utils.evaluate(clf, trainData)
+print('\nEvaluate your classifier with training dataset')
+utils.evaluate(clf, trainData)
 
-    print('\nEvaluate your classifier with test dataset')
-    utils.evaluate(clf, testData)
+print('\nEvaluate your classifier with test dataset')
+utils.evaluate(clf, testData)
 
-    # Part 4: Implement detect function in detection.py and test the following code.
-    print('\nUse your classifier with video.gif to get the predictions (one .txt and one .png)')
-    detection.detect('data/detect/detectData.txt', clf, t)
+# Part 4: Implement detect function in detection.py and test the following code.
+print('\nUse your classifier with video.gif to get the predictions (one .txt and one .png)')
+detection.detect('data/detect/detectData.txt', clf, t)
 
 """
 clf = adaboost.Adaboost(T=10)
