@@ -35,25 +35,25 @@ print(f'The number of test samples loaded: {len(testData)}')
 
 
 
-print('Start training your classifier')
 clfs = []
-# for t in range(1, 11):
-t = args.t
-print(f"Training with T={t}")
-clf = adaboost.Adaboost(T=t)
-clf.train(trainData)
-clf.save(f'clf_300_{t}')
-clf = adaboost.Adaboost.load(f'clf_300_{t}')
+# t = args.t
+print('Start training your classifier')
+for t in range(1, 11):
+    print(f"Training with T={t}")
+    clf = adaboost.Adaboost(T=t)
+    clf.train(trainData)
+    clf.save(f'clf_300_{t}')
+    clf = adaboost.Adaboost.load(f'clf_300_{t}')
 
-print('\nEvaluate your classifier with training dataset')
-utils.evaluate(clf, trainData)
+    print('\nEvaluate your classifier with training dataset')
+    utils.evaluate(clf, trainData)
 
-print('\nEvaluate your classifier with test dataset')
-utils.evaluate(clf, testData)
+    print('\nEvaluate your classifier with test dataset')
+    utils.evaluate(clf, testData)
 
-# Part 4: Implement detect function in detection.py and test the following code.
-print('\nUse your classifier with video.gif to get the predictions (one .txt and one .png)')
-detection.detect('data/detect/detectData.txt', clf, t)
+    # Part 4: Implement detect function in detection.py and test the following code.
+    print('\nUse your classifier with video.gif to get the predictions (one .txt and one .png)')
+    detection.detect('data/detect/detectData.txt', clf, t)
 
 """
 clf = adaboost.Adaboost(T=10)
