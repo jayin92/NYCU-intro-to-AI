@@ -73,7 +73,6 @@ def detect(dataPath, clf, t=10):
     while True:
         detect_label = []
         frame += 1
-        print(f"frame: {frame}")
         _, img = cap.read()
         if img is None:
             break
