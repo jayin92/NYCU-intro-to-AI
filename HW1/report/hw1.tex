@@ -1,4 +1,4 @@
-\documentclass{article}[12pt]
+\documentclass{article}[12pt, twocolumn]
 \usepackage{fontspec}   %加這個就可以設定字體
 \usepackage{xeCJK}       %讓中英文字體分開設置
 \usepackage{indentfirst}
@@ -14,6 +14,7 @@
 \usepackage[dvipsnames]{xcolor}
 \usepackage{graphicx}
 \usepackage{tabularx}
+\usepackage{booktabs}
 
 
 \usepackage[breakable, listings, skins, minted]{tcolorbox}
@@ -71,6 +72,10 @@
 \maketitle
 
 \section{Code and Explanation}
+
+Below is the code that is required to be finished. Explanation of this code is presented
+in the comment of the program.
+
 \begin{code}
 \captionof{listing}{Part 1 (\texttt{datasets.py})}
 \begin{minted}
@@ -160,22 +165,23 @@ return bestClf, bestError
 \captionof{listing}{Part 3 (\texttt{main.py})}
 \begin{minted}
 print('Start training your classifier')
-for t in range(1, 11):
-    print(f"Training with T={t}")
-    clf = adaboost.Adaboost(T=t)
-    clf.train(trainData)
-    clf.save(f'clf_300_{t}')
-    clf = adaboost.Adaboost.load(f'clf_300_{t}')
+for t in range(1, 11): # Train with different T (1 ~ 10)
+    print(f"Training with T={t}") 
+    clf = adaboost.Adaboost(T=t) # Init. clf using the given T
+    clf.train(trainData) # Train of train data
+    clf.save(f'clf_300_{t}') # Save the model file as clf_300_<t>
+    clf = adaboost.Adaboost.load(f'clf_300_{t}') # Load the model after saving
 
+    # Evaluate the model using already written utils.evaluate function
     print('\nEvaluate your classifier with training dataset')
-    utils.evaluate(clf, trainData)
+    utils.evaluate(clf, trainData) # Use train data to evaluate model
 
     print('\nEvaluate your classifier with test dataset')
-    utils.evaluate(clf, testData)
+    utils.evaluate(clf, testData) # Use test data to evaluate model
 
     # Part 4: Implement detect function in detection.py and test the following code.
     print('\nUse your classifier with video.gif to get the predictions (one .txt and one .png)')
-    detection.detect('data/detect/detectData.txt', clf, t)
+    detection.detect('data/detect/detectData.txt', clf, t) # Save the detection results to detectData.txt
 \end{minted}
 \end{code}
 
@@ -199,121 +205,133 @@ def detect(dataPath, clf, t=10):
         No returns.
     """
     # Begin your code (Part 4)
-    cords = []
+    cords = [] # Declare a list that stores the cordinate of each parking slots
     with open(dataPath) as file:
-        num_of_parking = int(file.readline())
-        for _ in range(num_of_parking):
-            tmp = file.readline()
-            tmp = tmp.split(" ")
-            res = tuple(map(int, tmp))
-            cords.append(res)
-    cap = cv2.VideoCapture(os.path.join(dataPath, "..", "video.gif"))
-    frame = 0
-    output_gif = []
-    first_frame = True
-    while True:
-        detect_label = []
-        frame += 1
-        print(f"frame: {frame}")
-        _, img = cap.read()
-        if img is None:
-            break
-        for cord in cords:
-            pic = crop(*cord, img)
-            pic = cv2.resize(pic, (36, 16))
-            pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY)
-            detect_label.append(clf.classify(pic))
-        for i, label in enumerate(detect_label):
-            if label:
-                pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)]
-                pos[2], pos[3] = pos[3], pos[2]
-                pos = np.array(pos, np.int32)
-                cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
+        num_of_parking = int(file.readline()) # Read the number total parking slots from the first line of files
+        for _ in range(num_of_parking): # Iterate all lines
+            tmp = file.readline() # Read a line in file
+            tmp = tmp.split(" ") # Split the line using " "
+            res = tuple(map(int, tmp)) # Convert the string type to int type using the built-in map function
+            cords.append(res) # Append the cordinates to "cords" list
     
-        output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-        if first_frame:
-            first_frame = False
-            cv2.imwrite(f"Adaboost_first_frame_{t}.png", img)
-        with open(f"Adaboost_pred_{t}.txt", "a") as txt:
-            res = ""
-            for i, label in enumerate(detect_label):
+    cap = cv2.VideoCapture(os.path.join(dataPath, "..", "video.gif")) # Use cv2.VideoCapture to read video.gif
+    frame = 0 # Counter to track current frame number
+    output_gif = [] # Declare a list to store each processed frame of output.gif
+    first_frame = True # A flag that will help us store the processed first frame images
+    while True:
+        detect_label = [] # Declare a list to store the detect results of each parking slots
+        frame += 1 # Make frame number add 1
+        _, img = cap.read() # Read a frame of video.gif
+        if img is None: # If all frame are read, then img is None
+            break # If None, then break
+        for cord in cords: # Iterate all cords
+            pic = crop(*cord, img) # Use * to unpack cord e.g. (x1, y1, ..., x4, y4) -> x1, y1, ..., x4, y4
+            pic = cv2.resize(pic, (36, 16)) # Resize image to (36, 16)
+            pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY) # Convert image to grayscale images
+            detect_label.append(clf.classify(pic)) # Use clf.classify to detect whether the parking slot is occupied or not
+                                                   # And append the result to "detect_label" list
+        for i, label in enumerate(detect_label): # Iterate all detect_label
+            if label: # If the model detects that this parking slot is occupied
+                pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)] # Add the four points of the rectangle to "pos" list
+                pos[2], pos[3] = pos[3], pos[2] # swap pos[2] and pos[3]
+                pos = np.array(pos, np.int32) # Convert python built-in list to numpy array
+                cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True) # Use cv2.polylines to draw rectangle
+    
+        output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)) # Append the result image of each frame to output_gif list (Also convert the color)
+        if first_frame: # If this frame is the first frame in video.gif
+            first_frame = False # After getting into this block, set first_frame to False
+            cv2.imwrite(f"Adaboost_first_frame_{t}.png", img) # Save the results of first frame
+        with open(f"Adaboost_pred_{t}.txt", "a") as txt: # Open the Adaboost_pred_<t>.txt and use append mode to add new line to file
+            res = "" # Declare an empty string
+            for i, label in enumerate(detect_label): # Iterate all labels
                 if label:
-                    res += "1"
+                    res += "1" # If the parking slot is occupied, then write 1 to file
                 else:
-                    res += "0"
+                    res += "0" # Else write 1
                 if i != len(detect_label) - 1:
-                    res += " "
+                    res += " " # If not the last label in a frame, then write a space to seperate each label
                 else:
-                    res += "\n"
-            txt.write(res)
-    imageio.mimsave(f'results_{t}.gif', output_gif, fps=2)
+                    res += "\n" # Else write newline character
+            txt.write(res) # Write the res string to file
+    imageio.mimsave(f'results_{t}.gif', output_gif, fps=2) # Use imageio.imsave to save result gif and set fps to 2
+    # End your code (Part 4)
+
 \end{minted}
 \end{code}
 
 \begin{code}
 \captionof{listing}{Part 5 (\texttt{yolov5\_sample\_code.ipynb})}
 \begin{minted}
-dataPath = os.path.join("HW1_material", "detect", "detectData.txt")
-cords = []
-with open(dataPath) as file:
-    num_of_parking = int(file.readline())
-    for _ in range(num_of_parking):
-        tmp = file.readline()
-        tmp = tmp.split(" ")
-        res = tuple(map(int, tmp))
-        cords.append(res)
-cap = cv2.VideoCapture(os.path.join("HW1_material", "detect", "video.gif"))
-frame = 0
-output_gif = []
-first_frame = True
+dataPath = os.path.join("HW1_material", "detect", "detectData.txt") # Path to "detectData.txt"
+cords = [] # Declare a list that stores the cordinate of each parking slots
+with open(dataPath) as file: # Open "detectData.txt"
+    num_of_parking = int(file.readline()) # Read the number total parking slots from the first line of files
+    for _ in range(num_of_parking): # Iterate all lines
+        tmp = file.readline() # Read a line in file
+        tmp = tmp.split(" ") # Split the line using " "
+        res = tuple(map(int, tmp)) # Convert the string type to int type using the built-in map function
+        cords.append(res) # Append the cordinates to "cords" list
+
+cap = cv2.VideoCapture(os.path.join("HW1_material", "detect", "video.gif")) # Use cv2.VideoCapture to read video.gif
+frame = 0 # Counter to track current frame number
+output_gif = [] # Declare a list to store each processed frame of output.gif
+first_frame = True # A flag that will help us store the processed first frame images
 while True:
-    detect_label = []
-    frame += 1
-    print(f"frame: {frame}")
-    _, img = cap.read()
-    if img is None:
-        break
-    for cord in cords:
-        pic = crop(*cord, img)
-        pic = cv2.resize(pic, (36, 16))
-        detect_label.append(yolov5_func.classify(pic, weight_path, confidence_threshold, (36, 16)))
-    for i, label in enumerate(detect_label):
-        if label:
-            pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)]
-            pos[2], pos[3] = pos[3], pos[2]
-            pos = np.array(pos, np.int32)
-            cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
-    if first_frame:
-        cv2.imwrite(img_save_path, img)
-        first_frame = False
-    output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    with open(txt_save_path, "a") as txt:
-        res = ""
-        for i, label in enumerate(detect_label):
+    detect_label = [] # Declare a list to store the detect results of each parking slots
+    frame += 1 # Make frame number add 1
+    _, img = cap.read() # Read a frame of video.gif
+    if img is None: # If all frame are read, then img is None
+        break # If None, then break
+    for cord in cords: # Iterate all cords
+        pic = crop(*cord, img) # Use * to unpack cord e.g. (x1, y1, ..., x4, y4) -> x1, y1, ..., x4, y4
+        pic = cv2.resize(pic, (36, 16)) # Resize image to (36, 16)
+        detect_label.append(yolov5_func.classify(pic, weight_path, confidence_threshold, (36, 16))) # Use yolov5_func.classify to detect whether the parking slot is occupied or not
+                                                                                                    # And append the result to "detect_label" list
+    for i, label in enumerate(detect_label): # Iterate all detect_label
+        if label: # If the model detects that this parking slot is occupied
+            pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)] # Add the four points of the rectangle to "pos" list
+            pos[2], pos[3] = pos[3], pos[2] # swap pos[2] and pos[3]
+            pos = np.array(pos, np.int32) # Convert python built-in list to numpy array
+            cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True) # Use cv2.polylines to draw rectangle
+
+    output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)) # Append the result image of each frame to output_gif list (Also convert the color)
+    if first_frame: # If this frame is the first frame in video.gif
+        cv2.imwrite(img_save_path, img) # After getting into this block, set first_frame to False
+        first_frame = False # Save the results of first frame
+    with open(txt_save_path, "a") as txt: # Open txt file and use append mode to add new line to file 
+        res = "" # Declare an empty string
+        for i, label in enumerate(detect_label): # Iterate all labels
             if label:
-                res += "1"
+                res += "1" # If the parking slot is occupied, then write 1 to file
             else:
-                res += "0"
+                res += "0" # Else write 1
             if i != len(detect_label) - 1:
-                res += " "
+                res += " " # If not the last label in a frame, then write a space to seperate each label
             else:
-                res += "\n"
-        txt.write(res)
-imageio.mimsave(f'results.gif', output_gif, fps=2)
+                res += "\n" # Else write newline character
+        txt.write(res) # Write the res string to file
+imageio.mimsave(gif_save_path, output_gif, fps=2) # Use imageio.imsave to save result gif and set fps to 2
 \end{minted}
 \end{code}
 
 \section{Experiments}
 \subsection{Hyperparameters Adjustment}
 \subsubsection{Adaboost}
-In Adaboost algorithm, the only hyperparameter we can change is \texttt{T}, 
+In Adaboost algorithm, we only change the hyperparameter \texttt{T}, 
 which indicates the number of classifers that will be used in the training process.
 
-\subsection{YOLOv5}
-
+We've trained 10 models, from $T=1$ to $T=10$. The performance of these 10 models will be
+shown in Section \ref{subsec:ada_comp}.
 
 \subsubsection{YOLOv5}
-\section{Results}
+In YOLOv5, the only hyperparameter we can change is the confidence threshold, which is a
+probability threshold. If the YOLOv5's output is greater than the threshold, then we consider
+that the parking slot is occupied.
+
+We've tested three kinds of threshold, which are 0.3, 0.4 and 0.5. And the performance of these
+three value will be presented in Section \ref{subsec:yolo_comp}.
+
+\section{Results} \label{sec:res}
 \subsection{Measurements}
 \subsubsection{Accuracy}
 In binary classification problem, we often define four kinds of accuracy, 
@@ -356,12 +374,52 @@ In reality, we often use ``F1-score'', which means $\beta=1$. So the ``F1-score'
 The range of F1-score is $[0, 1]$. If F1-score is higher (closer to 1), 
 then the performance of classifer is better.
 
+\subsection{Adaboost Comparision} \label{subsec:ada_comp}
 
+\begin{table}[]
+    \centering    
+    \caption{Performance of different Adaboost model from $T=1$ to $T=10$ on training datasets}
+    \begin{tabular}{@{}ccccccc@{}}
+        \toprule
+        $T$  & FP Rate (\%)  & FN Rate (\%)   & Accuracy (\%)  & Precision (\%)   & Recall (\%)      & F1-score         \\ \midrule
+        1  & 8.33          & 29.00          & 81.33          & 91.67        & 75.97        & 83.08        \\
+        2  & 8.33          & 29.00          & 81.33          & 91.67        & 75.97        & 83.08        \\
+        3  & \textbf{4.33} & 23.33          & 81.50          & \textbf{95.67}        & 80.39        & 87.37        \\
+        4  & 9.00          & 17.00          & 87.00          & 91.00        & 84.26        & 87.50        \\
+        5  & 7.00          & 13.33          & 89.83          & 92.33        & 88.50        & 90.38        \\
+        6  & 8.00          & 12.00 & 90.00          & 92.00        & 88.46        & 90.20        \\
+        7  & 7.00          & 13.33          & 89.83          & 93.00 & 87.46        & 90.15        \\
+        8  & 7.00          & 12.00 & 90.50          & 93.00        & 88.57        & 90.73        \\
+        9  & 8.00          & \textbf{10.67}          & \textbf{90.67} & 92.00        & \textbf{89.61} & \textbf{90.79} \\
+        10 & 7.33          & 12.67          & 90.00          & 92.67        & 87.97        & 90.26        \\ \bottomrule
+        \end{tabular}
+        \label{tab:ada_train}
+\end{table}
 
+\begin{table}[]
+    \centering
+    \caption{Performance of different Adaboost model from $T=1$ to $T=10$ on testing datasets}
+    \begin{tabular}{@{}ccccccc@{}}
+        \toprule
+        $T$  & FP Rate (\%)  & FN Rate (\%)   & Accuracy (\%)  & Precision (\%)   & Recall (\%)      & F1-score  \\ \midrule
+        1  & 8.00          & 30.33          & 80.83          & 92.00         & 75.20         & 82.76         \\
+        2  & 8.00          & 30.33          & 80.83          & 92.00         & 75.20         & 82.76         \\
+        3  & 6.33          & 30.67          & 81.50          & \textbf{93.67} & 75.34         & 83.51         \\
+        4  & 9.00          & 22.67          & 84.17          & 91.00         & 80.06         & 85.18         \\
+        5  & 8.67          & 21.00          & 85.17          & 91.33         & 81.31         & 86.03         \\
+        6  & \textbf{8.33} & \textbf{19.33} & \textbf{86.17} & 91.67         & \textbf{82.58} & \textbf{86.89} \\
+        7  & 7.67          & 23.67          & 84.33          & 92.33         & 79.60         & 85.49         \\
+        8  & 7.67          & 21.67          & 85.33          & 92.33         & 80.99         & 86.29         \\
+        9  & 10.00         & 20.00          & 85.00          & 90.00         & 81.82         & 85.71         \\
+        10 & 8.33          & 20.67          & 85.50          & 91.67         & 81.60         & 86.34         \\ \bottomrule
+    \end{tabular}
+    \label{tab:ada_test}    
+\end{table}
 
-\subsection{Visuals Results}
+From Table \ref{tab:ada_test}, we can observe that when $T=6$ F1-score is the highest. 
+\subsection{YOLOv5 Comparison} \label{subsec:yolo_comp}
 
-
+\subsection{Visual Results}
 
 \begin{figure}[H]
     \centering
@@ -371,19 +429,26 @@ then the performance of classifer is better.
 \end{figure}
 
 We use equation \ref{eq:acc} to calculate the accuracy in figure \ref{fig:acc}.
-\begin{equation}
+\begin{equation} 
     \text{Accuracy} = \frac{\text{TP}+\text{TN}}{\text{Total}}
     \label{eq:acc}
 \end{equation}
 
+
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{figure/Accuracy.png}
-    \caption{Accuracy of Adaboost (w/ 8 and 10 classifers)
-    and YOLOv5 (w/ threshold 0.3, 0.4 and 0.5) over time}
-    \label{fig:acc}
+    \includegraphics[width=\textwidth]{figure/Accuracy_Adaboost.png}
+    \caption{Accuracy of Adaboost ($T=1$ to $T=10$) over time}
+    \label{fig:acc_ada}
 \end{figure}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{figure/F1-score_Adaboost.png}
+    \caption{F1-score of Adaboost ($T=1$ to $T=10$) over time}
+    \label{fig:f1_ada}
+\end{figure}
 
 \begin{figure}[H]
     \centering
@@ -429,7 +494,14 @@ We use equation \ref{eq:acc} to calculate the accuracy in figure \ref{fig:acc}.
 
 \section{Problems}
 \subsection{alpha = math.log(1.0/beta) ValueError: math domain error}
-\subsection{The model has bad performance}
+The original code in \texttt{adaboost.py} line 59 is 
+\texttt{weights = weights / np.linalg.norm(weights)},
+but the default normalization method used in np.linalg.norm is L2-Norm, 
+which may lead some divides by zero problem in the calculation of alpha.
+Therefore, we changed this line to \texttt{weights = weights / np.linalg.norm(weights, ord=1)}, 
+which used the L1-Norm. After this change, the error in the title never shows up again.
+
+\subsection{}
 
 
 

@@ -58,51 +58,53 @@ def detect(dataPath, clf, t=10):
         No returns.
     """
     # Begin your code (Part 4)
-    cords = []
+    cords = [] # Declare a list that stores the cordinate of each parking slots
     with open(dataPath) as file:
-        num_of_parking = int(file.readline())
-        for _ in range(num_of_parking):
-            tmp = file.readline()
-            tmp = tmp.split(" ")
-            res = tuple(map(int, tmp))
-            cords.append(res)
-    cap = cv2.VideoCapture(os.path.join(dataPath, "..", "video.gif"))
-    frame = 0
-    output_gif = []
-    first_frame = True
-    while True:
-        detect_label = []
-        frame += 1
-        _, img = cap.read()
-        if img is None:
-            break
-        for cord in cords:
-            pic = crop(*cord, img)
-            pic = cv2.resize(pic, (36, 16))
-            pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY)
-            detect_label.append(clf.classify(pic))
-        for i, label in enumerate(detect_label):
-            if label:
-                pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)]
-                pos[2], pos[3] = pos[3], pos[2]
-                pos = np.array(pos, np.int32)
-                cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True)
+        num_of_parking = int(file.readline()) # Read the number total parking slots from the first line of files
+        for _ in range(num_of_parking): # Iterate all lines
+            tmp = file.readline() # Read a line in file
+            tmp = tmp.split(" ") # Split the line using " "
+            res = tuple(map(int, tmp)) # Convert the string type to int type using the built-in map function
+            cords.append(res) # Append the cordinates to "cords" list
     
-        output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-        if first_frame:
-            first_frame = False
-            cv2.imwrite(f"Adaboost_first_frame_{t}.png", img)
-        with open(f"Adaboost_pred_{t}.txt", "a") as txt:
-            res = ""
-            for i, label in enumerate(detect_label):
+    cap = cv2.VideoCapture(os.path.join(dataPath, "..", "video.gif")) # Use cv2.VideoCapture to read video.gif
+    frame = 0 # Counter to track current frame number
+    output_gif = [] # Declare a list to store each processed frame of output.gif
+    first_frame = True # A flag that will help us store the processed first frame images
+    while True:
+        detect_label = [] # Declare a list to store the detect results of each parking slots
+        frame += 1 # Make frame number add 1
+        _, img = cap.read() # Read a frame of video.gif
+        if img is None: # If all frame are read, then img is None
+            break # If None, then break
+        for cord in cords: # Iterate all cords
+            pic = crop(*cord, img) # Use * to unpack cord e.g. (x1, y1, ..., x4, y4) -> x1, y1, ..., x4, y4
+            pic = cv2.resize(pic, (36, 16)) # Resize image to (36, 16)
+            pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY) # Convert image to grayscale images
+            detect_label.append(clf.classify(pic)) # Use clf.classify to detect whether the parking slot is occupied or not
+                                                   # And append the result to "detect_label" list
+        for i, label in enumerate(detect_label): # Iterate all detect_label
+            if label: # If the model detects that this parking slot is occupied
+                pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)] # Add the four points of the rectangle to "pos" list
+                pos[2], pos[3] = pos[3], pos[2] # swap pos[2] and pos[3]
+                pos = np.array(pos, np.int32) # Convert python built-in list to numpy array
+                cv2.polylines(img, [pos], color=(0, 255, 0), isClosed=True) # Use cv2.polylines to draw rectangle
+    
+        output_gif.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB)) # Append the result image of each frame to output_gif list (Also convert the color)
+        if first_frame: # If this frame is the first frame in video.gif
+            first_frame = False # After getting into this block, set first_frame to False
+            cv2.imwrite(f"Adaboost_first_frame_{t}.png", img) # Save the results of first frame
+        with open(f"Adaboost_pred_{t}.txt", "a") as txt: # Open the Adaboost_pred_<t>.txt and use append mode to add new line to file
+            res = "" # Declare an empty string
+            for i, label in enumerate(detect_label): # Iterate all labels
                 if label:
-                    res += "1"
+                    res += "1" # If the parking slot is occupied, then write 1 to file
                 else:
-                    res += "0"
+                    res += "0" # Else write 1
                 if i != len(detect_label) - 1:
-                    res += " "
+                    res += " " # If not the last label in a frame, then write a space to seperate each label
                 else:
-                    res += "\n"
-            txt.write(res)
-    imageio.mimsave(f'results_{t}.gif', output_gif, fps=2)
+                    res += "\n" # Else write newline character
+            txt.write(res) # Write the res string to file
+    imageio.mimsave(f'results_{t}.gif', output_gif, fps=2) # Use imageio.imsave to save result gif and set fps to 2
     # End your code (Part 4)
