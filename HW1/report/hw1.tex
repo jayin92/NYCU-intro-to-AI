@@ -487,31 +487,68 @@ performance of each models.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{figure/Parking_Slots_Occupation.png}
-    \caption{The number of occupied parking slots detected by Adaboost(with 8 and 10 classifers)
-    , YOLOv5(with threshold 0.3, 0.4, 0.5, 0.6) and the ground truth}
+    \includegraphics[width=0.75\textwidth]{figure/Parking_Slots_Occupation_Adaboost.png}
+    \caption{The number of occupied parking slots detected by Adaboost ($T=1$ to $T=10$) 
+    and the ground truth}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{figure/Accuracy_Adaboost.png}
+    \includegraphics[width=0.75\textwidth]{figure/Parking_Slots_Occupation_yolo.png}
+    \caption{The number of occupied parking slots detected by YOLOv5 ($\text{threshold}=0.1$ 
+    to $\text{threshold}=0.6$) and the ground truth}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Accuracy_Adaboost.png}
     \caption{Accuracy of Adaboost ($T=1$ to $T=10$) over time}
     \label{fig:acc_ada}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{figure/F1-score_Adaboost.png}
+    \includegraphics[width=0.75\textwidth]{figure/Accuracy_yolo.png}
+    \caption{Accuracy of YOLOv5 ($\text{threshold}=0.1$ 
+    to $\text{threshold}=0.6$) over time}
+    \label{fig:acc_yolo}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/F1-score_Adaboost.png}
     \caption{F1-score of Adaboost ($T=1$ to $T=10$) over time}
     \label{fig:f1_ada}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{figure/F1-score.png}
-    \caption{F1-score of Adaboost (w/ 8 and 10 classifers)
-    and YOLOv5 (w/ threshold 0.3, 0.4, 0.5, 0.6) over time}
-    \label{fig:F1}
+    \includegraphics[width=0.75\textwidth]{figure/F1-score_yolo.png}
+    \caption{F1-score of YOLOv5 ($\text{threshold}=0.1$ 
+    to $\text{threshold}=0.6$) over time}
+    \label{fig:f1_yolo}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/F1-score_yolo.png}
+    \caption{F1-score of YOLOv5 ($\text{threshold}=0.1$ 
+    to $\text{threshold}=0.6$) over time}
+    \label{fig:f1_yolo}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Accuracy_all.png}
+    \caption{Accuracy of Adaboost ($T=6$) and YOLOv5 ($\text{threshold}=0.1, 0.2$) over time}
+    \label{fig:acc_all}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/F1-score_all.png}
+    \caption{F1-score of Adaboost ($T=6$) and YOLOv5 ($\text{threshold}=0.1, 0.2$) over time}
+    \label{fig:f1_all}
 \end{figure}
 
 \subsubsection{The first frame of video.gif}
@@ -532,6 +569,18 @@ performance of each models.
     \centering
     \includegraphics[width=0.75\textwidth]{figure/Adaboost_first_frame_10.png}
     \caption{The detection result of Adaboost with 10 classfiers}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Yolov5_first_frame_1.png}
+    \caption{The detection result of YOLOv5 with threshold set to 0.1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Yolov5_first_frame_2.png}
+    \caption{The detection result of YOLOv5 with threshold set to 0.2}
 \end{figure}
 
 \begin{figure}[H]
