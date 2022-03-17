@@ -15,11 +15,13 @@
 \usepackage{graphicx}
 \usepackage{tabularx}
 \usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
 
 
 \usepackage[breakable, listings, skins, minted]{tcolorbox}
 \usepackage{etoolbox}
-
+\setminted{fontsize=\footnotesize}
 \renewtcblisting{minted}{%
     listing engine=minted,
     minted language=python,
@@ -228,8 +230,7 @@ def detect(dataPath, clf, t=10):
             pic = crop(*cord, img) # Use * to unpack cord e.g. (x1, y1, ..., x4, y4) -> x1, y1, ..., x4, y4
             pic = cv2.resize(pic, (36, 16)) # Resize image to (36, 16)
             pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY) # Convert image to grayscale images
-            detect_label.append(clf.classify(pic)) # Use clf.classify to detect whether the parking slot is occupied or not
-                                                   # And append the result to "detect_label" list
+            detect_label.append(clf.classify(pic)) # Use clf.classify to detect whether the parking slot is occupied or not and append the result to "detect_label" list
         for i, label in enumerate(detect_label): # Iterate all detect_label
             if label: # If the model detects that this parking slot is occupied
                 pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)] # Add the four points of the rectangle to "pos" list
@@ -285,8 +286,7 @@ while True:
     for cord in cords: # Iterate all cords
         pic = crop(*cord, img) # Use * to unpack cord e.g. (x1, y1, ..., x4, y4) -> x1, y1, ..., x4, y4
         pic = cv2.resize(pic, (36, 16)) # Resize image to (36, 16)
-        detect_label.append(yolov5_func.classify(pic, weight_path, confidence_threshold, (36, 16))) # Use yolov5_func.classify to detect whether the parking slot is occupied or not
-                                                                                                    # And append the result to "detect_label" list
+        detect_label.append(yolov5_func.classify(pic, weight_path, confidence_threshold, (36, 16))) # Use yolov5_func.classify to detect whether the parking slot is occupied or not, and append the result to "detect_label" list
     for i, label in enumerate(detect_label): # Iterate all detect_label
         if label: # If the model detects that this parking slot is occupied
             pos = [[cords[i][idx], cords[i][idx+1]] for idx in range(0, 8, 2)] # Add the four points of the rectangle to "pos" list
@@ -317,18 +317,18 @@ imageio.mimsave(gif_save_path, output_gif, fps=2) # Use imageio.imsave to save r
 \section{Experiments}
 \subsection{Hyperparameters Adjustment}
 \subsubsection{Adaboost}
-In Adaboost algorithm, we only change the hyperparameter \texttt{T}, 
+In Adaboost algorithm, I only change the hyperparameter \texttt{T}, 
 which indicates the number of classifers that will be used in the training process.
 
-We've trained 10 models, from $T=1$ to $T=10$. The performance of these 10 models will be
+I've trained 10 models, from $T=1$ to $T=10$. The performance of these 10 models will be
 shown in Section \ref{subsec:ada_comp}.
 
 \subsubsection{YOLOv5}
-In YOLOv5, the only hyperparameter we can change is the confidence threshold, which is a
-probability threshold. If the YOLOv5's output is greater than the threshold, then we consider
+In YOLOv5, the only hyperparameter I can change is the confidence threshold, which is a
+probability threshold. If the YOLOv5's output is greater than the threshold, then it considers
 that the parking slot is occupied.
 
-We've tested three kinds of threshold, which are 0.3, 0.4 and 0.5. And the performance of these
+I've tested three kinds of threshold, which are 0.3, 0.4 and 0.5. And the performance of these
 three value will be presented in Section \ref{subsec:yolo_comp}.
 
 \section{Results} \label{sec:res}
@@ -376,7 +376,7 @@ then the performance of classifer is better.
 
 \subsection{Adaboost Comparision} \label{subsec:ada_comp}
 
-\begin{table}[]
+\begin{table}[H]
     \centering    
     \caption{Performance of different Adaboost model from $T=1$ to $T=10$ on training datasets}
     \begin{tabular}{@{}ccccccc@{}}
@@ -396,7 +396,7 @@ then the performance of classifer is better.
         \label{tab:ada_train}
 \end{table}
 
-\begin{table}[]
+\begin{table}[H]
     \centering
     \caption{Performance of different Adaboost model from $T=1$ to $T=10$ on testing datasets}
     \begin{tabular}{@{}ccccccc@{}}
@@ -416,25 +416,81 @@ then the performance of classifer is better.
     \label{tab:ada_test}    
 \end{table}
 
-From Table \ref{tab:ada_test}, we can observe that when $T=6$ F1-score is the highest. 
+From Table \ref{tab:ada_test}, we can observe that when $T=6$, the F1-score is the highest.
+
+This means the best value for hyperparameter $T$ is 6. Therefore, in the comparision of Adaboost
+and YOLOv5, I will set $T=6$ to compare with YOLOv5.
 \subsection{YOLOv5 Comparison} \label{subsec:yolo_comp}
 
-\subsection{Visual Results}
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table}[H]
+    \centering
+    \caption{Performance of different confidence threshold on training datasets}
+    \begin{tabular}{@{}ccccccc@{}}
+    \toprule
+    Threshhold & FP Rate (\%)  & FN Rate (\%)  & Accuracy (\%)  & Precision (\%) & Recall (\%)     & F1-score       \\ \midrule
+    0.3        & 19.67         & \textbf{0.00} & 90.17          & 80.33          & \textbf{100.00} & 89.09          \\
+    0.4        & 12.00         & 0.33          & 93.83          & 88.00          & 99.62           & 93.45          \\
+    0.5        & 2.67          & 7.00          & \textbf{95.17} & 97.33          & 93.29           & \textbf{95.27} \\
+    0.6        & \textbf{0.67} & 67.33         & 66.00          & \textbf{99.33} & 59.60           & 74.50          \\ \bottomrule
+    \end{tabular}
+    \label{tab: yolo_train}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{Performance of different confidence threshold on testing datasets}
+    \begin{tabular}{@{}ccccccc@{}}
+    \toprule
+    Threshhold & FP Rate (\%)  & FN Rate (\%)  & Accuracy (\%)  & Precision (\%)  & Recall (\%)     & F1-score       \\ \midrule
+    0.3        & 13.00         & \textbf{0.00} & 93.50          & 87.00           & \textbf{100.00} & 93.05          \\
+    0.4        & 5.00          & 0.00          & 97.50          & 95.00           & 100.00          & 97.44          \\
+    0.5        & 1.67          & 1.00          & \textbf{98.67} & 98.33           & 98.99           & \textbf{98.66} \\
+    0.6        & \textbf{0.00} & 59.00         & 70.50          & \textbf{100.00} & 62.89           & 77.22          \\ \bottomrule
+    \end{tabular}
+    \label{tab: yolo_test}
+\end{table}
+
+From Table \ref{tab: yolo_train} and Table \ref{tab: yolo_test}, 
+we can observe that when confidence threshold equals to 0.5, the F1-score on both
+training and testing is the highest.
+
+This means the best value for hyperparameter ``confidence threshold'' is 0.5.
+Therefore, in the comparision of Adaboost and YOLOv5, I will set confidence threshold to 0.5
+when comparing with Adaboost.
+
+\subsection{Comparision between Adaboost and YOLOv5}
+
+\begin{table}[H]
+    \centering
+    \caption{Performance of Adaboost and YOLOv5 on testing datasets}
+    \begin{tabular}{@{}ccccccc@{}}
+    \toprule
+    Model    & FP Rate (\%)  & FN Rate (\%)  & Accuracy (\%)  & Precision (\%) & Recall (\%)    & F1-score       \\ \midrule
+    Adaboost & 8.33          & 19.33         & 86.17          & 91.67          & 82.58          & 86.89          \\
+    YOLOv5   & \textbf{1.67} & \textbf{1.00} & \textbf{98.67} & \textbf{98.33} & \textbf{98.99} & \textbf{98.66} \\ \bottomrule
+    \end{tabular}
+    \label{tab:com_ada_yolo}
+\end{table}
+
+From Table \ref{tab:com_ada_yolo}, we can observe that YOLOv5 outperform the traditional
+Adaboost method.
+
+\subsection{The detection result of a real parking lot}
+
+The figures and plots below are the detection result of the parking lot. I use different
+hyperparameters and models to detect the occupied parking slots. I will also compare the 
+performance of each models.
+
+\subsubsection{Plots}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{figure/Parking_Slots_Occupation.png}
     \caption{The number of occupied parking slots detected by Adaboost(with 8 and 10 classifers)
-    , YOLOv5(with threshold 0.3, 0.4 and 0.5) and the ground truth}
+    , YOLOv5(with threshold 0.3, 0.4, 0.5, 0.6) and the ground truth}
 \end{figure}
-
-We use equation \ref{eq:acc} to calculate the accuracy in figure \ref{fig:acc}.
-\begin{equation} 
-    \text{Accuracy} = \frac{\text{TP}+\text{TN}}{\text{Total}}
-    \label{eq:acc}
-\end{equation}
-
-
 
 \begin{figure}[H]
     \centering
@@ -454,8 +510,16 @@ We use equation \ref{eq:acc} to calculate the accuracy in figure \ref{fig:acc}.
     \centering
     \includegraphics[width=\textwidth]{figure/F1-score.png}
     \caption{F1-score of Adaboost (w/ 8 and 10 classifers)
-    and YOLOv5 (w/ threshold 0.3, 0.4 and 0.5) over time}
+    and YOLOv5 (w/ threshold 0.3, 0.4, 0.5, 0.6) over time}
     \label{fig:F1}
+\end{figure}
+
+\subsubsection{The first frame of video.gif}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Adaboost_first_frame_6.png}
+    \caption{The detection result of Adaboost with 6 classfiers}
 \end{figure}
 
 \begin{figure}[H]
@@ -490,6 +554,31 @@ We use equation \ref{eq:acc} to calculate the accuracy in figure \ref{fig:acc}.
     \caption{The detection result of YOLOv5 with threshold set to 0.5}
 \end{figure}
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Yolov5_first_frame_6.png}
+    \caption{The detection result of YOLOv5 with threshold set to 0.6}
+\end{figure}
+
+\subsubsection{Discussion}
+
+As we can see in the plots and figures, the best model in this task is
+the YOLOv5 whose confidence threshold are set to 0.3.
+
+This result is inconsistent with the results present in 
+Section \ref{subsec:ada_comp} and Section \ref{subsec:yolo_comp}. 
+
+I guess that this situation happened because in the real parking lot, 
+most of the parking slots are occupied. 
+Therefore, if we set the confidence threshold to a lower value(like 0.3), then the model 
+will more likely to detect occupied parking slot. This will make the model's performance better.
+But if the parking lots we are going to detect has less occupied parking slots,
+setting a lower confidence threshold might not be a good idea. This may cause the detection results 
+has lots of false positive samples.
+
+In conclusion, I think the selction of confidence threshold is actually hard. I suggest set
+the confidence threshold to 0.5. Because if the parking lot is half-occupied (like in training 
+and testing datasets), setting the confidence threshold to 0.5 will have the best performance.
 
 
 \section{Problems}
@@ -498,10 +587,194 @@ The original code in \texttt{adaboost.py} line 59 is
 \texttt{weights = weights / np.linalg.norm(weights)},
 but the default normalization method used in np.linalg.norm is L2-Norm, 
 which may lead some divides by zero problem in the calculation of alpha.
-Therefore, we changed this line to \texttt{weights = weights / np.linalg.norm(weights, ord=1)}, 
+Therefore, I changed this line to \texttt{weights = weights / np.linalg.norm(weights, ord=1)}, 
 which used the L1-Norm. After this change, the error in the title never shows up again.
 
-\subsection{}
+\section{Bonus: Use HSV channel to detect occupied parkint slots}
+
+\subsection{Plot the histogram of HSV channel of ``car'' and ``non-car'' datasets}
+
+Out of curious, I plot the histogram of car and non-car training datasets HSV channel after converting
+the image from RGB to HSV. 
+
+The results is shown as Figure \ref{fig:hsv_h}, \ref{fig:hsv_s} and \ref{fig:hsv_v}.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure/H_car.png}
+        \caption{Car}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure/H_noncar.png}
+        \caption{Non-car}
+    \end{subfigure}
+    \caption{The H channel histogram of ``car'' and ``non-car'' images in training datasets.}
+    \label{fig:hsv_h}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure/S_car.png}
+        \caption{Car}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure/S_noncar.png}
+        \caption{Non-car}
+    \end{subfigure}
+    \caption{The S channel histogram of ``car'' and ``non-car'' images in training datasets.}
+    \label{fig:hsv_s}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure/V_car.png}
+        \caption{Car}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figure/V_noncar.png}
+        \caption{Non-car}
+    \end{subfigure}
+    \caption{The V channel histogram of ``car'' and ``non-car'' images in training datasets.}
+    \label{fig:hsv_v}
+\end{figure}
+
+As we can see, the V channel of ``car'' and ``non-car'' images have significant differences. 
+
+Most of the ``non-car'' images has a peak when intensity is in range of $[40, 200]$ and their maximum y-value 
+(number of pixels) are greater than $40$.
+
+On the other hand, most of the ``car'' images' maximum y-value are less than $35$.
+
+Therefore, we can use this feature to classify whether this parking slot is occupied or not. 
+Next section will discuss how to write the actual code to make this method work.
+
+
+\subsection{The detection code of the ``V-channel histogram'' method}
+
+After conducting some experiments, I set the highest-peak range to $[40, 200]$ and threshold to 27. 
+Below is the code I implement to detect the parking slot using the ``V-channel histogram'' method.
+
+\begin{code}
+\captionof{listing}{The classify function(\texttt{bonus/classify.py})}
+\begin{minted}
+import cv2
+import numpy as np
+
+def classify(img):
+    v = img[:,:,2] # Extract the V channel from an HSV images
+    hist_v = cv2.calcHist([v], [0], None, [256], [0, 256]) # Use cv2.calcHist to calculate the histogram.
+    # If hist_v's highest peak occured in [40, 200] and its y-value is greater than 27, then we consider this parking slot isn't occupied
+    if 40 <= np.argmax(hist_v) and np.argmax(hist_v) <= 200 and 27 <= np.max(hist_v):
+        return False
+    else:
+        return True
+\end{minted}
+\end{code}
+
+Because we need to convert images to HSV, I also edit \texttt{datasets.py} to convert images in advance.
+
+\begin{code}
+\captionof{listing}{\texttt{bonus/dataset.py}}
+\begin{minted}
+import os
+import cv2
+
+def loadImages(dataPath):
+    """
+    Load all Images in the folder and transfer a list of tuples. 
+    The first element is the numpy array of shape (m, n) representing the image.
+    (remember to resize and convert the parking space images to 36 x 16 grayscale images.) 
+    The second element is its classification (1 or 0)
+        Parameters:
+        dataPath: The folder path.
+        Returns:
+        dataset: The list of tuples.
+    """
+    # Begin your code (Part 1)
+    dataset = [] # Declare an empty list to save the grayscale images
+
+    # Process images in "car" directory
+    for item in os.listdir(os.path.join(dataPath, "car")): # Use os.path.join to generate paths
+        img = cv2.imread(os.path.join(dataPath, "car", item)) # Read image from files
+        img = cv2.resize(img, (36, 16)) # Resize the image from (360, 160) to (36, 16)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV) # Convert image to HSV image
+        data = (img, 1) # Create a tuple to store image and label and 
+        # because all images in "car" folder is the occupied parking space, the label is set to 1
+        dataset.append(data) # Append the tuple to the dataset list
+    
+    for item in os.listdir(os.path.join(dataPath, "non-car")): # Do the same thing as above but this time is for "non-car" folder
+        img = cv2.imread(os.path.join(dataPath, "non-car", item))
+        img = cv2.resize(img, (36, 16))
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        data = (img, 0) # Not occupied parking space, label is set to 0
+        dataset.append(data)
+    # End your code (Part 1)
+    
+    return dataset    
+\end{minted}
+\end{code}
+
+\subsection{Results}
+
+\subsubsection{Comparision on testing datasets}
+
+\begin{table}[H]
+    \centering
+    \caption{Performance of Adaboost, YOLOv5 and V-Channel Method on testing datasets}
+    \begin{tabular}{@{}ccccccc@{}}
+    \toprule
+    Model    & FP Rate (\%)  & FN Rate (\%)  & Accuracy (\%)  & Precision (\%) & Recall (\%)    & F1-score       \\ \midrule
+    Adaboost & 8.33          & 19.33         & 86.17          & 91.67          & 82.58          & 86.89          \\
+    YOLOv5   & \textbf{1.67} & \textbf{1.00} & \textbf{98.67} & \textbf{98.33} & \textbf{98.99} & \textbf{98.66} \\ 
+    V-Channel & 3.33 & 1.33 & 97.6 & 96.67 & 98.64 & 97.64 \\ \bottomrule
+    \end{tabular}
+    \label{tab:com_v}
+\end{table}
+
+As we can see in Table \ref{tab:com_v}, though our method's performance is slightly worse than YOLOv5
+, the advantage of V-channel method is that the detection speed is much faster than YOLOv5, 
+and running the algorithm don't require an expensive GPU or chip. 
+
+\subsubsection{Comparsion on an real parking lot}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Parking_Slots_Occupation_v.png}
+    \caption{The number of occupied parking slots detected by Adaboost(with 6$\sim$10 classifers)
+    , YOLOv5(with threshold 0.1$\sim$0.4), V-channel method and the ground truth}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/Accuracy_v.png}
+    \caption{The Accuracy of Adaboost(with 6$\sim$10 classifers)
+    , YOLOv5(with threshold 0.1$\sim$0.4) and V-channel method}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/F1-score_v.png}
+    \caption{The F1-score of Adaboost(with 6$\sim$10 classifers)
+    , YOLOv5(with threshold 0.1$\sim$0.4) and V-channel method}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figure/CV_first_frame.png}
+    \caption{The detection result of V-channel method}
+\end{figure}
 
 
 
