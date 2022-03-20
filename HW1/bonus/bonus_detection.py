@@ -3,7 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import imageio
-from classify import classify
+from bonus_classify import classify
 
 
 def crop(x1, y1, x2, y2, x3, y3, x4, y4, img) :

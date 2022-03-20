@@ -1,5 +1,5 @@
-from utils import evaluate
-from dataset import loadImages
+from bonus_utils import evaluate
+from bonus_dataset import loadImages
 
 train_dataset = loadImages("data/train")
 test_dataset = loadImages("data/test")

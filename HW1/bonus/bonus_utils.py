@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import cv2
-from classify import classify
+from bonus_classify import classify
 
 def evaluate(dataset):
     all_negatives, all_positives = 0, 0

@@ -1,4 +1,4 @@
-\documentclass{article}[12pt, twocolumn]
+\documentclass{article}[12pt]
 \usepackage{fontspec}   %加這個就可以設定字體
 \usepackage{xeCJK}       %讓中英文字體分開設置
 \usepackage{indentfirst}
@@ -75,7 +75,7 @@
 
 \section{Code and Explanation}
 
-Below is the code that is required to be finished. Explanation of this code is presented
+The following is the code that is required to be finished. Explanation of this code is presented
 in the comment of the program.
 
 \begin{code}
@@ -320,7 +320,7 @@ imageio.mimsave(gif_save_path, output_gif, fps=2) # Use imageio.imsave to save r
 In Adaboost algorithm, I only change the hyperparameter \texttt{T}, 
 which indicates the number of classifers that will be used in the training process.
 
-I've trained 10 models, from $T=1$ to $T=10$. The performance of these 10 models will be
+I have trained 10 models, from $T=1$ to $T=10$. The performance of these 10 models will be
 shown in Section \ref{subsec:ada_comp}.
 
 \subsubsection{YOLOv5}
@@ -328,14 +328,14 @@ In YOLOv5, the only hyperparameter I can change is the confidence threshold, whi
 probability threshold. If the YOLOv5's output is greater than the threshold, then it considers
 that the parking slot is occupied.
 
-I've tested three kinds of threshold, which are 0.3, 0.4 and 0.5. And the performance of these
+I have tested three kinds of threshold, which are 0.3, 0.4 and 0.5. And the performance of these
 three value will be presented in Section \ref{subsec:yolo_comp}.
 
 \section{Results} \label{sec:res}
 \subsection{Measurements}
 \subsubsection{Accuracy}
 In binary classification problem, we often define four kinds of accuracy, 
-which are True Positive, True Negative, False Positive and False Negative 
+which are True Positive, True Negative, False Positive, and False Negative 
 to show the performance of classifiers. Their definitions are written below:
 \begin{itemize}
     \item True Positive (TP): The real label is \textbf{true}, 
@@ -366,13 +366,13 @@ And the definition of F-score is:
     \text {F-score}=\frac{\left(1+\beta^{2}\right) \text { precision } \times \text { recall }}{\beta^{2} \text { precision }+\text { recall }}
 \end{equation}
 
-In reality, we often use ``F1-score'', which means $\beta=1$. So the ``F1-score'' can be written as:
+In reality, we often use ``F1-score'', which means $\beta=1$. Therefore, the ``F1-score'' can be written as:
 \begin{equation}
     \text {F1-score}=2 \times \frac{\text { precision } \times \text { recall }}{\text { precision }+\text { recall }}
 \end{equation}
 
 The range of F1-score is $[0, 1]$. If F1-score is higher (closer to 1), 
-then the performance of classifer is better.
+then the performance of classifier is better.
 
 \subsection{Adaboost Comparision} \label{subsec:ada_comp}
 
@@ -430,6 +430,8 @@ and YOLOv5, I will set $T=6$ to compare with YOLOv5.
     \begin{tabular}{@{}ccccccc@{}}
     \toprule
     Threshhold & FP Rate (\%)  & FN Rate (\%)  & Accuracy (\%)  & Precision (\%) & Recall (\%)     & F1-score       \\ \midrule
+    0.1 & 32.00 & 0.00 & 84.00 & 68.00 & 100.00 & 80.95 \\
+    0.2 & 24.67 & 0.00 & 87.67 & 75.33 & 100.00 & 85.93 \\
     0.3        & 19.67         & \textbf{0.00} & 90.17          & 80.33          & \textbf{100.00} & 89.09          \\
     0.4        & 12.00         & 0.33          & 93.83          & 88.00          & 99.62           & 93.45          \\
     0.5        & 2.67          & 7.00          & \textbf{95.17} & 97.33          & 93.29           & \textbf{95.27} \\
@@ -444,6 +446,8 @@ and YOLOv5, I will set $T=6$ to compare with YOLOv5.
     \begin{tabular}{@{}ccccccc@{}}
     \toprule
     Threshhold & FP Rate (\%)  & FN Rate (\%)  & Accuracy (\%)  & Precision (\%)  & Recall (\%)     & F1-score       \\ \midrule
+    0.1 & 30.00 & 0.00 & 85.00 & 70.00 & 100.00 & 82.35 \\
+    0.2 & 19.67 & 0.00 & 90.17 & 80.33 & 100.00 & 89.09 \\
     0.3        & 13.00         & \textbf{0.00} & 93.50          & 87.00           & \textbf{100.00} & 93.05          \\
     0.4        & 5.00          & 0.00          & 97.50          & 95.00           & 100.00          & 97.44          \\
     0.5        & 1.67          & 1.00          & \textbf{98.67} & 98.33           & 98.99           & \textbf{98.66} \\
@@ -453,11 +457,11 @@ and YOLOv5, I will set $T=6$ to compare with YOLOv5.
 \end{table}
 
 From Table \ref{tab: yolo_train} and Table \ref{tab: yolo_test}, 
-we can observe that when confidence threshold equals to 0.5, the F1-score on both
+we can observe that when the confidence threshold equals to 0.5, the F1-score on both
 training and testing is the highest.
 
-This means the best value for hyperparameter ``confidence threshold'' is 0.5.
-Therefore, in the comparision of Adaboost and YOLOv5, I will set confidence threshold to 0.5
+This means the best value for the hyperparameter ``confidence threshold'' is 0.5.
+Therefore, in the comparison of Adaboost and YOLOv5, I will set the confidence threshold to 0.5
 when comparing with Adaboost.
 
 \subsection{Comparision between Adaboost and YOLOv5}
@@ -474,14 +478,14 @@ when comparing with Adaboost.
     \label{tab:com_ada_yolo}
 \end{table}
 
-From Table \ref{tab:com_ada_yolo}, we can observe that YOLOv5 outperform the traditional
+From Table \ref{tab:com_ada_yolo}, we can observe that YOLOv5 outperforms the traditional
 Adaboost method.
 
 \subsection{The detection result of a real parking lot}
 
 The figures and plots below are the detection result of the parking lot. I use different
 hyperparameters and models to detect the occupied parking slots. I will also compare the 
-performance of each models.
+performance of each model.
 
 \subsubsection{Plots}
 
@@ -519,14 +523,6 @@ performance of each models.
     \includegraphics[width=0.75\textwidth]{figure/F1-score_Adaboost.png}
     \caption{F1-score of Adaboost ($T=1$ to $T=10$) over time}
     \label{fig:f1_ada}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.75\textwidth]{figure/F1-score_yolo.png}
-    \caption{F1-score of YOLOv5 ($\text{threshold}=0.1$ 
-    to $\text{threshold}=0.6$) over time}
-    \label{fig:f1_yolo}
 \end{figure}
 
 \begin{figure}[H]
@@ -612,7 +608,7 @@ performance of each models.
 \subsubsection{Discussion}
 
 As we can see in the plots and figures, the best model in this task is
-the YOLOv5 whose confidence threshold are set to 0.3.
+the YOLOv5 whose confidence thresholds are set to 0.3.
 
 This result is inconsistent with the results present in 
 Section \ref{subsec:ada_comp} and Section \ref{subsec:yolo_comp}. 
@@ -620,12 +616,12 @@ Section \ref{subsec:ada_comp} and Section \ref{subsec:yolo_comp}.
 I guess that this situation happened because in the real parking lot, 
 most of the parking slots are occupied. 
 Therefore, if we set the confidence threshold to a lower value(like 0.3), then the model 
-will more likely to detect occupied parking slot. This will make the model's performance better.
-But if the parking lots we are going to detect has less occupied parking slots,
+will more likely to detect an occupied parking slot. This will make the model's performance better.
+However, if the parking lot we are going to detect has less occupied parking slots,
 setting a lower confidence threshold might not be a good idea. This may cause the detection results 
 has lots of false positive samples.
 
-In conclusion, I think the selction of confidence threshold is actually hard. I suggest set
+In conclusion, I think the selection of the confidence threshold is actually hard. I suggest set
 the confidence threshold to 0.5. Because if the parking lot is half-occupied (like in training 
 and testing datasets), setting the confidence threshold to 0.5 will have the best performance.
 
@@ -635,7 +631,7 @@ and testing datasets), setting the confidence threshold to 0.5 will have the bes
 The original code in \texttt{adaboost.py} line 59 is 
 \texttt{weights = weights / np.linalg.norm(weights)},
 but the default normalization method used in np.linalg.norm is L2-Norm, 
-which may lead some divides by zero problem in the calculation of alpha.
+which may lead some divide by zero problem in the calculation of alpha.
 Therefore, I changed this line to \texttt{weights = weights / np.linalg.norm(weights, ord=1)}, 
 which used the L1-Norm. After this change, the error in the title never shows up again.
 
@@ -643,10 +639,10 @@ which used the L1-Norm. After this change, the error in the title never shows up
 
 \subsection{Plot the histogram of HSV channel of ``car'' and ``non-car'' datasets}
 
-Out of curious, I plot the histogram of car and non-car training datasets HSV channel after converting
+Out of curious, I plot the histogram of car and non-car training datasets HSV channels after converting
 the image from RGB to HSV. 
 
-The results is shown as Figure \ref{fig:hsv_h}, \ref{fig:hsv_s} and \ref{fig:hsv_v}.
+The result is shown as Figure \ref{fig:hsv_h}, \ref{fig:hsv_s} and \ref{fig:hsv_v}.
 
 \begin{figure}[H]
     \centering
@@ -701,10 +697,10 @@ The results is shown as Figure \ref{fig:hsv_h}, \ref{fig:hsv_s} and \ref{fig:hsv
 
 As we can see, the V channel of ``car'' and ``non-car'' images have significant differences. 
 
-Most of the ``non-car'' images has a peak when intensity is in range of $[40, 200]$ and their maximum y-value 
+Most of the ``non-car'' images have a peak intensity is in the range of $[40, 200]$ and their maximum y-value 
 (number of pixels) are greater than $40$.
 
-On the other hand, most of the ``car'' images' maximum y-value are less than $35$.
+On the other hand, most of the ``car'' images' maximum y-values are less than $35$.
 
 Therefore, we can use this feature to classify whether this parking slot is occupied or not. 
 Next section will discuss how to write the actual code to make this method work.
@@ -712,11 +708,11 @@ Next section will discuss how to write the actual code to make this method work.
 
 \subsection{The detection code of the ``V-channel histogram'' method}
 
-After conducting some experiments, I set the highest-peak range to $[40, 200]$ and threshold to 27. 
-Below is the code I implement to detect the parking slot using the ``V-channel histogram'' method.
+After conducting some experiments, I set the highest peak range to $[40, 200]$ and the threshold to 27. 
+Below is the code I implemented to detect the parking slot using the ``V-channel histogram'' method.
 
 \begin{code}
-\captionof{listing}{The classify function(\texttt{bonus/classify.py})}
+\captionof{listing}{classify function(\texttt{bonus/classify.py})}
 \begin{minted}
 import cv2
 import numpy as np
@@ -777,7 +773,7 @@ def loadImages(dataPath):
 
 \subsection{Results}
 
-\subsubsection{Comparision on testing datasets}
+\subsubsection{Comparison on testing datasets}
 
 \begin{table}[H]
     \centering
@@ -794,9 +790,9 @@ def loadImages(dataPath):
 
 As we can see in Table \ref{tab:com_v}, though our method's performance is slightly worse than YOLOv5
 , the advantage of V-channel method is that the detection speed is much faster than YOLOv5, 
-and running the algorithm don't require an expensive GPU or chip. 
+and running the algorithm does not require an expensive GPU or chip. 
 
-\subsubsection{Comparsion on an real parking lot}
+\subsubsection{Comparison on an real parking lot}
 
 \begin{figure}[H]
     \centering
@@ -824,7 +820,5 @@ and running the algorithm don't require an expensive GPU or chip.
     \includegraphics[width=0.75\textwidth]{figure/CV_first_frame.png}
     \caption{The detection result of V-channel method}
 \end{figure}
-
-
 
 \end{document}
