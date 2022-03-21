@@ -608,20 +608,19 @@ performance of each model.
 \subsubsection{Discussion}
 
 As we can see in the plots and figures, the best model in this task is
-the YOLOv5 whose confidence thresholds are set to 0.3.
+the YOLOv5 whose confidence thresholds are set to 0.1.
 
-This result is inconsistent with the results present in 
-Section \ref{subsec:ada_comp} and Section \ref{subsec:yolo_comp}. 
+This result is inconsistent with the results present in Section \ref{subsec:yolo_comp}. 
 
 I guess that this situation happened because in the real parking lot, 
 most of the parking slots are occupied. 
-Therefore, if we set the confidence threshold to a lower value(like 0.3), then the model 
+Therefore, if we set the confidence threshold to a lower value (like 0.1), then the model 
 will more likely to detect an occupied parking slot. This will make the model's performance better.
 However, if the parking lot we are going to detect has less occupied parking slots,
 setting a lower confidence threshold might not be a good idea. This may cause the detection results 
 has lots of false positive samples.
 
-In conclusion, I think the selection of the confidence threshold is actually hard. I suggest set
+In conclusion, I think the selection of the confidence threshold is hard. I suggest set
 the confidence threshold to 0.5. Because if the parking lot is half-occupied (like in training 
 and testing datasets), setting the confidence threshold to 0.5 will have the best performance.
 
@@ -712,7 +711,7 @@ After conducting some experiments, I set the highest peak range to $[40, 200]$ a
 Below is the code I implemented to detect the parking slot using the ``V-channel histogram'' method.
 
 \begin{code}
-\captionof{listing}{classify function(\texttt{bonus/classify.py})}
+\captionof{listing}{classify function(\texttt{bonus\_classify.py})}
 \begin{minted}
 import cv2
 import numpy as np
@@ -731,7 +730,7 @@ def classify(img):
 Because we need to convert images to HSV, I also edit \texttt{datasets.py} to convert images in advance.
 
 \begin{code}
-\captionof{listing}{\texttt{bonus/dataset.py}}
+\captionof{listing}{\texttt{bonus\_dataset.py}}
 \begin{minted}
 import os
 import cv2
@@ -797,22 +796,22 @@ and running the algorithm does not require an expensive GPU or chip.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{figure/Parking_Slots_Occupation_v.png}
-    \caption{The number of occupied parking slots detected by Adaboost(with 6$\sim$10 classifers)
-    , YOLOv5(with threshold 0.1$\sim$0.4), V-channel method and the ground truth}
+    \caption{The number of occupied parking slots detected by Adaboost(with 6 classifers)
+    , YOLOv5(with threshold 0.1 and 0.2), V-channel method and the ground truth}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{figure/Accuracy_v.png}
-    \caption{The Accuracy of Adaboost(with 6$\sim$10 classifers)
-    , YOLOv5(with threshold 0.1$\sim$0.4) and V-channel method}
+    \caption{The Accuracy of Adaboost(with 6 classifers)
+    , YOLOv5(with threshold 0.1 and 0.2) and V-channel method}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{figure/F1-score_v.png}
-    \caption{The F1-score of Adaboost(with 6$\sim$10 classifers)
-    , YOLOv5(with threshold 0.1$\sim$0.4) and V-channel method}
+    \caption{The F1-score of Adaboost(with 6 classifers)
+    , YOLOv5(with threshold 0.1 and 0.2) and V-channel method}
 \end{figure}
 
 \begin{figure}[H]
