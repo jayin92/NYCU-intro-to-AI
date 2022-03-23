@@ -79,7 +79,7 @@ The following is the code that is required to be finished. Explanation of this c
 in the comment of the program.
 
 \begin{code}
-\captionof{listing}{Part 1 (\texttt{datasets.py})}
+\captionof{listing}{Part 1 (\texttt{dataset.py})}
 \begin{minted}
 import os
 import cv2
@@ -304,7 +304,7 @@ while True:
             if label:
                 res += "1" # If the parking slot is occupied, then write 1 to file
             else:
-                res += "0" # Else write 1
+                res += "0" # Else write 0
             if i != len(detect_label) - 1:
                 res += " " # If not the last label in a frame, then write a space to seperate each label
             else:
@@ -404,10 +404,10 @@ then the performance of classifier is better.
         $T$  & FP Rate (\%)  & FN Rate (\%)   & Accuracy (\%)  & Precision (\%)   & Recall (\%)      & F1-score  \\ \midrule
         1  & 8.00          & 30.33          & 80.83          & 92.00         & 75.20         & 82.76         \\
         2  & 8.00          & 30.33          & 80.83          & 92.00         & 75.20         & 82.76         \\
-        3  & 6.33          & 30.67          & 81.50          & \textbf{93.67} & 75.34         & 83.51         \\
+        3  & \textbf{6.33}          & 30.67          & 81.50          & \textbf{93.67} & 75.34         & 83.51         \\
         4  & 9.00          & 22.67          & 84.17          & 91.00         & 80.06         & 85.18         \\
         5  & 8.67          & 21.00          & 85.17          & 91.33         & 81.31         & 86.03         \\
-        6  & \textbf{8.33} & \textbf{19.33} & \textbf{86.17} & 91.67         & \textbf{82.58} & \textbf{86.89} \\
+        6  & 8.33 & \textbf{19.33} & \textbf{86.17} & 91.67         & \textbf{82.58} & \textbf{86.89} \\
         7  & 7.67          & 23.67          & 84.33          & 92.33         & 79.60         & 85.49         \\
         8  & 7.67          & 21.67          & 85.33          & 92.33         & 80.99         & 86.29         \\
         9  & 10.00         & 20.00          & 85.00          & 90.00         & 81.82         & 85.71         \\
