@@ -1,3 +1,4 @@
+from itertools import count
 import math
 from collections import Counter, defaultdict
 from typing import List
@@ -30,7 +31,19 @@ class Ngram:
         Compute the co-occurrence of each pair.
         '''
         # begin your code (Part 1)
-        
+        print("corpus", corpus_tokenize[0])
+        for item in corpus_tokenize:
+            counter = dict()
+            if item in counter:
+                counter[item] += 1
+            else:
+                counter[item] = 0
+        res = []
+        for item in corpus_tokenize:
+            res.append(counter[item] / len(counter))
+
+
+        return res
         # end your code
     
     def train(self, df):
@@ -53,7 +66,12 @@ class Ngram:
         corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']]
         
         # begin your code (Part 2)
-        
+        perplexity = []
+        for item in corpus:
+
+            for i in range(0, len(item), 2):
+                math.log()
+        print(corpus)
         # end your code
 
         return perplexity
@@ -82,7 +100,7 @@ class Ngram:
 
         # step 2. convert each sentence in both training data and testing data to embedding.
         # Note that you should name "train_corpus_embedding" and "test_corpus_embedding" for feeding the model.
-
+        
         # end your code
 
         # feed converted embeddings to Naive Bayes

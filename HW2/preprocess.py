@@ -1,6 +1,6 @@
 from nltk.corpus import stopwords
 from nltk.tokenize.toktok import ToktokTokenizer
-
+from nltk.stem import SnowballStemmer
 
 def remove_stopwords(text: str) -> str:
     '''
@@ -19,10 +19,12 @@ def remove_stopwords(text: str) -> str:
 
 
 def preprocessing_function(text: str) -> str:
-    preprocessed_text = remove_stopwords(text)
 
     # Begin your code (Part 0)
-
+    preprocessed_text = text.replace("<br />", "")
+    english_stemmer = SnowballStemmer(language='english')
+    preprocessed_text = english_stemmer.stem(preprocessed_text)
+    preprocessed_text = remove_stopwords(preprocessed_text)
     # End your code
-
+    print(preprocessed_text)
     return preprocessed_text
