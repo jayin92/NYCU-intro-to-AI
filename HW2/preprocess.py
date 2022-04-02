@@ -26,5 +26,4 @@ def preprocessing_function(text: str) -> str:
     preprocessed_text = english_stemmer.stem(preprocessed_text)
     preprocessed_text = remove_stopwords(preprocessed_text)
     # End your code
-    print(preprocessed_text)
     return preprocessed_text

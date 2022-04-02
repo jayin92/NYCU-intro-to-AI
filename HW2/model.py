@@ -1,6 +1,7 @@
 from itertools import count
+from logging.config import stopListening
 import math
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 from typing import List
 
 import nltk
@@ -63,7 +64,8 @@ class Ngram:
                 model[x][y] = prob
         
         
-        return model, bigrams
+        features = OrderedDict(sorted(bigramCnt.items(), key=lambda item: -item[1]))
+        return model, features
         # end your code
     
     def train(self, df):
@@ -87,10 +89,15 @@ class Ngram:
         # begin your code (Part 2)
         self.model, self.features = self.get_ngram(corpus)
         l = 0
+        total = 0
         for feature in self.features:
-            l += math.log2(self.model[feature[0]][feature[1]])
+            x = feature[0]
+            y = feature[1]
+            cnt = self.features[feature]
+            l += math.log2(self.model[x][y]) * cnt
+            total += cnt
         
-        l /= len(self.features)
+        l /= total
 
         perplexity = pow(2, -l)
 
@@ -118,10 +125,28 @@ class Ngram:
 
         # step 1. select the most feature_num patterns as features, you can adjust feature_num for better score!
         feature_num = 500
-
         # step 2. convert each sentence in both training data and testing data to embedding.
         # Note that you should name "train_corpus_embedding" and "test_corpus_embedding" for feeding the model.
+        self.train(df_train)
+        bigramIdx = {}
+        for i, item in enumerate(list(self.features)[:feature_num]):
+            bigramIdx[item] = i
+        train_corpus_embedding = [[0] * feature_num for _ in range(len(df_train['review']))]
+        test_corpus_embedding = [[0] * feature_num for _ in range(len(df_test['review']))]
+        train_corpus = [['[CLS]'] + self.tokenize(document) for document in df_train['review']] 
+        test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
+
+        for i, document in enumerate(train_corpus):
+            for idx in range(len(document)-1):
+                bigram = (document[idx], document[idx+1])
+                if bigram in bigramIdx:
+                    train_corpus_embedding[i][bigramIdx[bigram]] += 1
         
+        for i, document in enumerate(test_corpus):
+            for idx in range(len(document)-1):
+                bigram = (document[idx], document[idx+1])
+                if bigram in bigramIdx:
+                    test_corpus_embedding[i][bigramIdx[bigram]] += 1
         # end your code
 
         # feed converted embeddings to Naive Bayes
