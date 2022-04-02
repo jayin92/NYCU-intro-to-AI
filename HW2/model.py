@@ -31,19 +31,39 @@ class Ngram:
         Compute the co-occurrence of each pair.
         '''
         # begin your code (Part 1)
-        print("corpus", corpus_tokenize[0])
-        for item in corpus_tokenize:
-            counter = dict()
-            if item in counter:
-                counter[item] += 1
+        unigramCnt = {}
+        bigramCnt  = {}
+        bigrams    = []
+        unigrams   = []
+        for document in corpus_tokenize:
+            for idx in range(len(document)-1):
+                bigram = (document[idx], document[idx+1])
+
+                bigrams.append(bigram)
+                unigrams.append(document[idx])
+
+                if bigram in bigramCnt:
+                    bigramCnt[bigram] += 1
+                else:
+                    bigramCnt[bigram] = 1
+                if document[idx] in unigramCnt:
+                    unigramCnt[document[idx]] += 1
+                else:
+                    unigramCnt[document[idx]] = 1
+        model = {}
+        for bigram in bigrams:
+            x = bigram[0]
+            y = bigram[1]
+           
+            prob = bigramCnt[bigram] / unigramCnt[x]
+            if x in model:
+                model[x][y] = prob
             else:
-                counter[item] = 0
-        res = []
-        for item in corpus_tokenize:
-            res.append(counter[item] / len(counter))
-
-
-        return res
+                model[x] = dict()
+                model[x][y] = prob
+        
+        
+        return model, bigrams
         # end your code
     
     def train(self, df):
@@ -64,17 +84,18 @@ class Ngram:
             raise NotImplementedError("Train your model first")
 
         corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']]
-        
         # begin your code (Part 2)
-        perplexity = []
-        for item in corpus:
+        self.model, self.features = self.get_ngram(corpus)
+        l = 0
+        for feature in self.features:
+            l += math.log2(self.model[feature[0]][feature[1]])
+        
+        l /= len(self.features)
 
-            for i in range(0, len(item), 2):
-                math.log()
-        print(corpus)
-        # end your code
+        perplexity = pow(2, -l)
 
         return perplexity
+
 
     def train_sentiment(self, df_train, df_test):
         '''
