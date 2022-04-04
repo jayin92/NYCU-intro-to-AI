@@ -3,6 +3,8 @@ from logging.config import stopListening
 import math
 from collections import Counter, defaultdict, OrderedDict
 from typing import List
+from unittest import expectedFailure
+from cv2 import exp
 
 import nltk
 import numpy as np
@@ -80,7 +82,7 @@ class Ngram:
     def compute_perplexity(self, df_test) -> float:
         '''
         Compute the perplexity of n-gram model.
-        Perplexity = 2^(-entropy)
+        Perplexity = 2^(entropy)
         '''
         if self.model is None:
             raise NotImplementedError("Train your model first")
@@ -127,28 +129,86 @@ class Ngram:
         feature_num = 500
         # step 2. convert each sentence in both training data and testing data to embedding.
         # Note that you should name "train_corpus_embedding" and "test_corpus_embedding" for feeding the model.
+        # document_num = 1000
         self.train(df_train)
         bigramIdx = {}
-        for i, item in enumerate(list(self.features)[:feature_num]):
-            bigramIdx[item] = i
-        train_corpus_embedding = [[0] * feature_num for _ in range(len(df_train['review']))]
-        test_corpus_embedding = [[0] * feature_num for _ in range(len(df_test['review']))]
-        train_corpus = [['[CLS]'] + self.tokenize(document) for document in df_train['review']] 
-        test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
-
-        for i, document in enumerate(train_corpus):
+        bigramPos = {}
+        bigramNeg = {}
+        sumPos = 0
+        sumNeg = 0
+        train_corpus = [['[CLS]'] + self.tokenize(document) for document in df_train['review']]
+        y = list(df_train['sentiment'])
+        for i, document in tqdm(enumerate(train_corpus)):
             for idx in range(len(document)-1):
                 bigram = (document[idx], document[idx+1])
-                if bigram in bigramIdx:
-                    train_corpus_embedding[i][bigramIdx[bigram]] += 1
+                if y[i] == 1:
+                    if bigram in bigramPos:
+                        bigramPos[bigram] += 1
+                    else:
+                        bigramPos[bigram] = 1
+                    sumPos += 1
+                else:
+                    if bigram in bigramNeg:
+                        bigramNeg[bigram] += 1
+                    else:
+                        bigramNeg[bigram] = 1
+                    sumNeg += 1
+        sumAll = sumPos + sumNeg
+        allBigram = bigramPos|bigramNeg
+        chiFeatures = []
+        for key in tqdm(allBigram):
+            keyCnt = 0
+            if key in bigramPos:
+                keyCnt += bigramPos[key]
+            if key in bigramNeg:
+                keyCnt += bigramNeg[key]
+            e11 = sumPos * keyCnt / sumAll
+            e10 = sumNeg * keyCnt / sumAll
+            e01 = sumPos * (sumAll-keyCnt) / sumAll
+            e00 = sumNeg * (sumAll-keyCnt) / sumAll
+            chi =  ((bigramPos[key] if key in bigramPos else 0) - e11)**2 / e11
+            chi += ((bigramNeg[key] if key in bigramNeg else 0) - e10)**2 / e10
+            chi += (sumPos - (bigramPos[key] if key in bigramPos else 0) - e01)**2 / e01
+            chi += (sumNeg - (bigramNeg[key] if key in bigramNeg else 0) - e00)**2 / e00
+
+            chiFeatures.append((key, chi))
+        sorted(chiFeatures, key=lambda pair: -pair[1])
+        print(chiFeatures[:20])
+        train_corpus_embedding = [[0] * len(list(self.features)) for _ in range(len(df_train['review']))]
+        # y = np.append(1-y, y, axis=1)
+        # print(y.shape)
+        # print(len(list(self.features)))
+        # for i, item in enumerate(list(self.features)):
+        #     bigramIdx[item] = i
         
+
+        # for i, document in tqdm(enumerate(train_corpus)):
+        #     for idx in range(len(document)-1):
+        #         bigram = (document[idx], document[idx+1])
+        #         if bigram in bigramIdx:
+        #             train_corpus_embedding[i][bigramIdx[bigram]] += 1
+        
+        # training_fs = np.array(train_corpus_embedding)
+        # print(training_fs.shape)
+        # observed = np.dot(y.T, training_fs)
+        # classProb = y.mean(axix=0).reshape(1, -1)
+        # fetureCnt = training_fs.sum(axis=0).reshape(1, -1)
+        # expected = np.dot(classProb.T, fetureCnt)
+        # chisq = (observed - expected) ** 2 / expected
+        # chisq_score = chisq.sum(axis = 0)
+        # chisq_score = list(chisq_score)
+        # sorted_feature = [x for _, x in sorted(zip(chisq_score, self.features), key=lambda pair: -pair[0])]
+        # print(chisq_score[:20])
+        # print(sorted_feature[:20])
+
+        test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
+        test_corpus_embedding = [[0] * feature_num for _ in range(len(df_test['review']))]
         for i, document in enumerate(test_corpus):
             for idx in range(len(document)-1):
                 bigram = (document[idx], document[idx+1])
                 if bigram in bigramIdx:
                     test_corpus_embedding[i][bigramIdx[bigram]] += 1
         # end your code
-
         # feed converted embeddings to Naive Bayes
         nb_model = GaussianNB()
         nb_model.fit(train_corpus_embedding, df_train['sentiment'])
