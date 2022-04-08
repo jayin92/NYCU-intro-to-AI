@@ -126,10 +126,10 @@ class Ngram:
         # begin your code (Part 3)
 
         # step 1. select the most feature_num patterns as features, you can adjust feature_num for better score!
-        feature_num = 500
+        feature_num = 2000
         # step 2. convert each sentence in both training data and testing data to embedding.
         # Note that you should name "train_corpus_embedding" and "test_corpus_embedding" for feeding the model.
-        # document_num = 1000
+
         self.train(df_train)
         bigramIdx = {}
         bigramPos = {}
@@ -154,7 +154,7 @@ class Ngram:
                         bigramNeg[bigram] = 1
                     sumNeg += 1
         sumAll = sumPos + sumNeg
-        allBigram = bigramPos|bigramNeg
+        allBigram = {**bigramPos, **bigramNeg}
         chiFeatures = []
         for key in tqdm(allBigram):
             keyCnt = 0
@@ -172,37 +172,25 @@ class Ngram:
             chi += (sumNeg - (bigramNeg[key] if key in bigramNeg else 0) - e00)**2 / e00
 
             chiFeatures.append((key, chi))
-        sorted(chiFeatures, key=lambda pair: -pair[1])
+        chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
         print(chiFeatures[:20])
-        train_corpus_embedding = [[0] * len(list(self.features)) for _ in range(len(df_train['review']))]
-        # y = np.append(1-y, y, axis=1)
-        # print(y.shape)
-        # print(len(list(self.features)))
-        # for i, item in enumerate(list(self.features)):
-        #     bigramIdx[item] = i
-        
-
-        # for i, document in tqdm(enumerate(train_corpus)):
-        #     for idx in range(len(document)-1):
-        #         bigram = (document[idx], document[idx+1])
-        #         if bigram in bigramIdx:
-        #             train_corpus_embedding[i][bigramIdx[bigram]] += 1
-        
-        # training_fs = np.array(train_corpus_embedding)
-        # print(training_fs.shape)
-        # observed = np.dot(y.T, training_fs)
-        # classProb = y.mean(axix=0).reshape(1, -1)
-        # fetureCnt = training_fs.sum(axis=0).reshape(1, -1)
-        # expected = np.dot(classProb.T, fetureCnt)
-        # chisq = (observed - expected) ** 2 / expected
-        # chisq_score = chisq.sum(axis = 0)
-        # chisq_score = list(chisq_score)
-        # sorted_feature = [x for _, x in sorted(zip(chisq_score, self.features), key=lambda pair: -pair[0])]
-        # print(chisq_score[:20])
-        # print(sorted_feature[:20])
+        kBestFeatures = chiFeatures[:feature_num]
 
         test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
-        test_corpus_embedding = [[0] * feature_num for _ in range(len(df_test['review']))]
+
+        train_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_train['review']))]
+        test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
+
+        for i, pair in enumerate(kBestFeatures):
+            bigramIdx[pair[0]] = i
+        
+
+        for i, document in tqdm(enumerate(train_corpus)):
+            for idx in range(len(document)-1):
+                bigram = (document[idx], document[idx+1])
+                if bigram in bigramIdx:
+                    train_corpus_embedding[i][bigramIdx[bigram]] += 1
+
         for i, document in enumerate(test_corpus):
             for idx in range(len(document)-1):
                 bigram = (document[idx], document[idx+1])
