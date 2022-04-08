@@ -34,15 +34,23 @@ def get_argument():
     opt.add_argument("--part",
                         type=int,
                         help="specify the part")
+    opt.add_argument("--num_features",
+                        type=int,
+                        help="number of features",
+                        default=500)
+    opt.add_argument("--N",
+                        type=int,
+                        help="uni/bi/tri-gram",
+                        default=2)
 
     config = vars(opt.parse_args())
     return config
 
 
-def first_part(model_type, df_train, df_test, N):
+def first_part(model_type, df_train, df_test, config, N):
     # load and train model
     if model_type == 'ngram':
-        model = Ngram(N)
+        model = Ngram(config=config, n=N)
         model.train(df_train)
     else:
         raise NotImplementedError
@@ -54,7 +62,7 @@ def first_part(model_type, df_train, df_test, N):
     return model
 
 
-def second_part(model_type, df_train, df_test, N):
+def second_part(model_type, df_train, df_test, config, N):
     # configurations
     second_config = {
         'batch_size': 8,
@@ -66,7 +74,7 @@ def second_part(model_type, df_train, df_test, N):
     # load model
     if model_type == 'ngram':
         # train n-gram first
-        model = first_part(model_type, df_train, df_test, N)
+        model = first_part(model_type, df_train, df_test, config, N)
     elif model_type == 'BERT':
         train_data = MovieDataset(df_train)
         test_data = MovieDataset(df_test)
@@ -89,7 +97,7 @@ if __name__ == '__main__':
     # get argument
     config = get_argument()
     model_type, preprocessed = config['model_type'], config['preprocess']
-    N = 2                          # we only use bi-gram in this assignment, but you can try different N
+    N = config['N']                         # we only use bi-gram in this assignment, but you can try different N
 
     # read and prepare data
     df_train, df_test = prepare_data()
@@ -104,7 +112,7 @@ if __name__ == '__main__':
 
     if config['part'] == 1:
         # Part 1: Implement bi-gram model
-        first_part(model_type, df_train, df_test, N)
+        first_part(model_type, df_train, df_test, config, N)
     elif config['part'] == 2:
         # Part 2: Implement and compare the performance of each model
-        second_part(model_type, df_train, df_test, N)
+        second_part(model_type, df_train, df_test, config, N)

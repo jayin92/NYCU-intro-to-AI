@@ -2,6 +2,7 @@ from itertools import count
 from logging.config import stopListening
 import math
 from collections import Counter, defaultdict, OrderedDict
+from pydoc import doc
 from typing import List
 from unittest import expectedFailure
 from cv2 import exp
@@ -15,7 +16,7 @@ from tqdm import tqdm
 
 
 class Ngram:
-    def __init__(self, config, n=2):
+    def __init__(self, config=None, n=2):
         self.tokenizer = ToktokTokenizer()
         self.n = n
         self.model = None
@@ -36,37 +37,69 @@ class Ngram:
         # begin your code (Part 1)
         unigramCnt = {}
         bigramCnt  = {}
+        trigramCnt = {}
         bigrams    = []
         unigrams   = []
+        trigrams   = []
+        total = 0
         for document in corpus_tokenize:
             for idx in range(len(document)-1):
+                total += 1
+                if idx != len(document) - 2:
+                    trigram = (document[idx], document[idx+1], document[idx+2])
+                    if trigram in trigramCnt:
+                        trigramCnt[trigram] += 1
+                    else:
+                        trigramCnt[trigram] = 1
                 bigram = (document[idx], document[idx+1])
-
-                bigrams.append(bigram)
                 unigrams.append(document[idx])
+                bigrams.append(bigram)
+                trigrams.append(trigram)
+
 
                 if bigram in bigramCnt:
                     bigramCnt[bigram] += 1
                 else:
                     bigramCnt[bigram] = 1
+
                 if document[idx] in unigramCnt:
                     unigramCnt[document[idx]] += 1
                 else:
                     unigramCnt[document[idx]] = 1
         model = {}
-        for bigram in bigrams:
-            x = bigram[0]
-            y = bigram[1]
-           
-            prob = bigramCnt[bigram] / unigramCnt[x]
-            if x in model:
-                model[x][y] = prob
-            else:
-                model[x] = dict()
-                model[x][y] = prob
-        
-        
-        features = OrderedDict(sorted(bigramCnt.items(), key=lambda item: -item[1]))
+        if self.n == 1:
+            for uni in unigrams:
+                x = uni
+                prob = unigramCnt[x] / total
+                model[x] = prob
+            
+            features = OrderedDict(sorted(unigramCnt.items(), key=lambda item: -item[1]))
+        elif self.n == 2:
+            for bigram in bigrams:
+                x = bigram[0]
+                y = bigram[1]
+            
+                prob = bigramCnt[bigram] / unigramCnt[x]
+                if x in model:
+                    model[x][y] = prob
+                else:
+                    model[x] = dict()
+                    model[x][y] = prob
+            
+            features = OrderedDict(sorted(bigramCnt.items(), key=lambda item: -item[1]))
+        elif self.n == 3:
+            for trigram in trigrams:
+                x = trigram[0]
+                y = trigram[1]
+                z = trigram[2]
+
+                prob = trigramCnt[trigram] / bigramCnt[(x, y)]
+                if (x, y) in model:
+                    model[(x, y)][z] = prob
+                else:
+                    model[(x, y)] = dict()
+                    model[(x, y)][z] = prob
+            features = OrderedDict(sorted(trigramCnt.items(), key=lambda item: -item[1]))
         return model, features
         # end your code
     
@@ -92,13 +125,28 @@ class Ngram:
         self.model, self.features = self.get_ngram(corpus)
         l = 0
         total = 0
-        for feature in self.features:
-            x = feature[0]
-            y = feature[1]
-            cnt = self.features[feature]
-            l += math.log2(self.model[x][y]) * cnt
-            total += cnt
-        
+        if self.n == 1:
+             for feature in self.features:
+                x = feature
+                cnt = self.features[feature]
+                l += math.log2(self.model[x]) * cnt
+                total += cnt
+        elif self.n == 2:
+            for feature in self.features:
+                x = feature[0]
+                y = feature[1]
+                cnt = self.features[feature]
+                l += math.log2(self.model[x][y]) * cnt
+                total += cnt
+        elif self.n == 3:
+            for feature in self.features:
+                x = feature[0]
+                y = feature[1]
+                z = feature[2]
+                cnt = self.features[feature]
+                l += math.log2(self.model[(x, y)][z]) * cnt
+                total += cnt
+
         l /= total
 
         perplexity = pow(2, -l)
@@ -126,76 +174,195 @@ class Ngram:
         # begin your code (Part 3)
 
         # step 1. select the most feature_num patterns as features, you can adjust feature_num for better score!
-        feature_num = 2000
+        feature_num = self.config['num_features']
         # step 2. convert each sentence in both training data and testing data to embedding.
         # Note that you should name "train_corpus_embedding" and "test_corpus_embedding" for feeding the model.
 
         self.train(df_train)
-        bigramIdx = {}
-        bigramPos = {}
-        bigramNeg = {}
+        gramIdx = {}
+        gramPos = {}
+        gramNeg = {}
         sumPos = 0
         sumNeg = 0
         train_corpus = [['[CLS]'] + self.tokenize(document) for document in df_train['review']]
         y = list(df_train['sentiment'])
-        for i, document in tqdm(enumerate(train_corpus)):
-            for idx in range(len(document)-1):
-                bigram = (document[idx], document[idx+1])
-                if y[i] == 1:
-                    if bigram in bigramPos:
-                        bigramPos[bigram] += 1
+        if self.n == 1:
+            for i, document in tqdm(enumerate(train_corpus)):
+                for idx in range(len(document)):
+                    unigram = document[idx]
+                    if y[i] == 1:
+                        if unigram in gramPos:
+                            gramPos[unigram] += 1
+                        else:
+                            gramPos[unigram] = 1
+                        sumPos += 1
                     else:
-                        bigramPos[bigram] = 1
-                    sumPos += 1
-                else:
-                    if bigram in bigramNeg:
-                        bigramNeg[bigram] += 1
+                        if unigram in gramNeg:
+                            gramNeg[unigram] += 1
+                        else:
+                            gramNeg[unigram] = 1
+                        sumNeg += 1
+            sumAll = sumPos + sumNeg
+            allUnigram = {**gramPos, **gramNeg}
+            chiFeatures = []
+            for key in tqdm(allUnigram):
+                keyCnt = 0
+                if key in gramPos:
+                    keyCnt += gramPos[key]
+                if key in gramNeg:
+                    keyCnt += gramNeg[key]
+                e11 = sumPos * keyCnt / sumAll
+                e10 = sumNeg * keyCnt / sumAll
+                e01 = sumPos * (sumAll-keyCnt) / sumAll
+                e00 = sumNeg * (sumAll-keyCnt) / sumAll
+                chi =  ((gramPos[key] if key in gramPos else 0) - e11)**2 / e11
+                chi += ((gramNeg[key] if key in gramNeg else 0) - e10)**2 / e10
+                chi += (sumPos - (gramPos[key] if key in gramPos else 0) - e01)**2 / e01
+                chi += (sumNeg - (gramNeg[key] if key in gramNeg else 0) - e00)**2 / e00
+
+                chiFeatures.append((key, chi))
+            chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
+            print(chiFeatures[:20])
+            kBestFeatures = chiFeatures[:feature_num]
+
+            test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
+
+            train_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_train['review']))]
+            test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
+
+            for i, pair in enumerate(kBestFeatures):
+                gramIdx[pair[0]] = i
+            
+
+            for i, document in tqdm(enumerate(train_corpus)):
+                for idx in range(len(document)):
+                    unigram = document[idx]
+                    if unigram in gramIdx:
+                        train_corpus_embedding[i][gramIdx[unigram]] += 1
+
+            for i, document in enumerate(test_corpus):
+                for idx in range(len(document)):
+                    unigram = document[idx]
+                    if unigram in gramIdx:
+                        test_corpus_embedding[i][gramIdx[unigram]] += 1
+        elif self.n == 2:
+            for i, document in tqdm(enumerate(train_corpus)):
+                for idx in range(len(document)-1):
+                    bigram = (document[idx], document[idx+1])
+                    if y[i] == 1:
+                        if bigram in gramPos:
+                            gramPos[bigram] += 1
+                        else:
+                            gramPos[bigram] = 1
+                        sumPos += 1
                     else:
-                        bigramNeg[bigram] = 1
-                    sumNeg += 1
-        sumAll = sumPos + sumNeg
-        allBigram = {**bigramPos, **bigramNeg}
-        chiFeatures = []
-        for key in tqdm(allBigram):
-            keyCnt = 0
-            if key in bigramPos:
-                keyCnt += bigramPos[key]
-            if key in bigramNeg:
-                keyCnt += bigramNeg[key]
-            e11 = sumPos * keyCnt / sumAll
-            e10 = sumNeg * keyCnt / sumAll
-            e01 = sumPos * (sumAll-keyCnt) / sumAll
-            e00 = sumNeg * (sumAll-keyCnt) / sumAll
-            chi =  ((bigramPos[key] if key in bigramPos else 0) - e11)**2 / e11
-            chi += ((bigramNeg[key] if key in bigramNeg else 0) - e10)**2 / e10
-            chi += (sumPos - (bigramPos[key] if key in bigramPos else 0) - e01)**2 / e01
-            chi += (sumNeg - (bigramNeg[key] if key in bigramNeg else 0) - e00)**2 / e00
+                        if bigram in gramNeg:
+                            gramNeg[bigram] += 1
+                        else:
+                            gramNeg[bigram] = 1
+                        sumNeg += 1
+            sumAll = sumPos + sumNeg
+            allBigram = {**gramPos, **gramNeg}
+            chiFeatures = []
+            for key in tqdm(allBigram):
+                keyCnt = 0
+                if key in gramPos:
+                    keyCnt += gramPos[key]
+                if key in gramNeg:
+                    keyCnt += gramNeg[key]
+                e11 = sumPos * keyCnt / sumAll
+                e10 = sumNeg * keyCnt / sumAll
+                e01 = sumPos * (sumAll-keyCnt) / sumAll
+                e00 = sumNeg * (sumAll-keyCnt) / sumAll
+                chi =  ((gramPos[key] if key in gramPos else 0) - e11)**2 / e11
+                chi += ((gramNeg[key] if key in gramNeg else 0) - e10)**2 / e10
+                chi += (sumPos - (gramPos[key] if key in gramPos else 0) - e01)**2 / e01
+                chi += (sumNeg - (gramNeg[key] if key in gramNeg else 0) - e00)**2 / e00
 
-            chiFeatures.append((key, chi))
-        chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
-        print(chiFeatures[:20])
-        kBestFeatures = chiFeatures[:feature_num]
+                chiFeatures.append((key, chi))
+            chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
+            print(chiFeatures[:20])
+            kBestFeatures = chiFeatures[:feature_num]
 
-        test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
+            test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
 
-        train_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_train['review']))]
-        test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
+            train_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_train['review']))]
+            test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
 
-        for i, pair in enumerate(kBestFeatures):
-            bigramIdx[pair[0]] = i
-        
+            for i, pair in enumerate(kBestFeatures):
+                gramIdx[pair[0]] = i
+            
 
-        for i, document in tqdm(enumerate(train_corpus)):
-            for idx in range(len(document)-1):
-                bigram = (document[idx], document[idx+1])
-                if bigram in bigramIdx:
-                    train_corpus_embedding[i][bigramIdx[bigram]] += 1
+            for i, document in tqdm(enumerate(train_corpus)):
+                for idx in range(len(document)-1):
+                    bigram = (document[idx], document[idx+1])
+                    if bigram in gramIdx:
+                        train_corpus_embedding[i][gramIdx[bigram]] += 1
 
-        for i, document in enumerate(test_corpus):
-            for idx in range(len(document)-1):
-                bigram = (document[idx], document[idx+1])
-                if bigram in bigramIdx:
-                    test_corpus_embedding[i][bigramIdx[bigram]] += 1
+            for i, document in enumerate(test_corpus):
+                for idx in range(len(document)-1):
+                    bigram = (document[idx], document[idx+1])
+                    if bigram in gramIdx:
+                        test_corpus_embedding[i][gramIdx[bigram]] += 1
+        elif self.n == 3:
+            for i, document in tqdm(enumerate(train_corpus)):
+                for idx in range(len(document)-2):
+                    trigram = (document[idx], document[idx+1], document[idx+2])
+                    if y[i] == 1:
+                        if trigram in gramPos:
+                            gramPos[trigram] += 1
+                        else:
+                            gramPos[trigram] = 1
+                        sumPos += 1
+                    else:
+                        if trigram in gramNeg:
+                            gramNeg[trigram] += 1
+                        else:
+                            gramNeg[trigram] = 1
+                        sumNeg += 1
+            sumAll = sumPos + sumNeg
+            allTrigram = {**gramPos, **gramNeg}
+            chiFeatures = []
+            for key in tqdm(allTrigram):
+                keyCnt = 0
+                if key in gramPos:
+                    keyCnt += gramPos[key]
+                if key in gramNeg:
+                    keyCnt += gramNeg[key]
+                e11 = sumPos * keyCnt / sumAll
+                e10 = sumNeg * keyCnt / sumAll
+                e01 = sumPos * (sumAll-keyCnt) / sumAll
+                e00 = sumNeg * (sumAll-keyCnt) / sumAll
+                chi =  ((gramPos[key] if key in gramPos else 0) - e11)**2 / e11
+                chi += ((gramNeg[key] if key in gramNeg else 0) - e10)**2 / e10
+                chi += (sumPos - (gramPos[key] if key in gramPos else 0) - e01)**2 / e01
+                chi += (sumNeg - (gramNeg[key] if key in gramNeg else 0) - e00)**2 / e00
+
+                chiFeatures.append((key, chi))
+            chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
+            print(chiFeatures[:20])
+            kBestFeatures = chiFeatures[:feature_num]
+
+            test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
+
+            train_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_train['review']))]
+            test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
+
+            for i, pair in enumerate(kBestFeatures):
+                gramIdx[pair[0]] = i
+            
+
+            for i, document in tqdm(enumerate(train_corpus)):
+                for idx in range(len(document)-2):
+                    trigram = (document[idx], document[idx+1], document[idx+2])
+                    if trigram in gramIdx:
+                        train_corpus_embedding[i][gramIdx[trigram]] += 1
+
+            for i, document in enumerate(test_corpus):
+                for idx in range(len(document)-2):
+                    trigram = (document[idx], document[idx+1], document[idx+2])
+                    if trigram in gramIdx:
+                        test_corpus_embedding[i][gramIdx[trigram]] += 1
         # end your code
         # feed converted embeddings to Naive Bayes
         nb_model = GaussianNB()
