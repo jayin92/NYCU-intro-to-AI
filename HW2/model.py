@@ -141,9 +141,10 @@ class Ngram:
                         cnt = self.features[feature]
                     else:
                         cnt = 0
-                    
-                    l += (math.log2((self.unigramCnt[x] + 1 if x in self.unigramCnt else 1)) - math.log2(self.tt + self.V)) * cnt
-                    total += cnt
+                    numer = self.unigramCnt[x] + 1 if x in self.unigramCnt else 1
+                    domin = self.tt + self.V
+                    l += (math.log2(numer/domin)) * cnt
+                    total += 1
 
         elif self.n == 2:
             for document in corpus:
@@ -156,9 +157,10 @@ class Ngram:
                         cnt = self.features[feature]
                     else:
                         cnt = 0
-
-                    l += (math.log2((self.bigramCnt[feature] + 1 if feature in self.bigramCnt else 1)) - math.log2((self.unigramCnt[x] if x in self.unigramCnt else 0) + self.V)) * cnt
-                    total += cnt
+                    numer = (self.bigramCnt[feature] + 1 if feature in self.bigramCnt else 1)
+                    domin = (self.unigramCnt[x] if x in self.unigramCnt else 0) + self.V
+                    l += math.log2(numer/domin)
+                    total += 1
         elif self.n == 3:
             for document in corpus:
                 for idx in range(len(document) - 2):
@@ -170,8 +172,10 @@ class Ngram:
                         cnt = self.features[feature]
                     else:
                         cnt = 0
-                    l += (math.log2((self.trigramCnt[feature] + 1 if feature in self.trigramCnt else 1)) - math.log2((self.bigramCnt[(x, y)] if (x, y) in self.bigramCnt else 0) + self.V)) * cnt
-                    total += cnt
+                    numer = self.trigramCnt[feature] + 1 if feature in self.trigramCnt else 1
+                    domin = (self.bigramCnt[(x, y)] if (x, y) in self.bigramCnt else 0) + self.V
+                    l += math.log2(numer/domin) * cnt
+                    total += 1
 
         l /= total
 

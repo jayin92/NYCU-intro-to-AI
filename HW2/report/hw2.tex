@@ -61,7 +61,7 @@
 \date{\today}
 
 \setCJKmainfont{Noto Serif TC}
-\setmonofont[Mapping=tex-text]{Cascadia Mono}
+\setmonofont[Mapping=tex-text]{Consolas}
 
 \XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
 \XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
@@ -170,9 +170,24 @@ $N_{neg}(\text{bigram})$ 為 $\text{bigram}$ 在 negative 句子出現的次數�
 對於結果越 dependent，也就代表此 bigram 越有價值。
 
 計算出所有 bigram 的 $\chi^2$ score 後，我們就可以將各 bigram 透過 $\chi^2$ score 從小
-排到大，並取出前 \texttt{feature\_num} 做為 GaussianNB 的輸入。
+排到大，並取出前 \texttt{feature\_num} 個 bigram 做為 GaussianNB 的輸入。
+
+\section{Perplexity}
+透過 Eq. \ref{eq: add-1}，我們即可以計算一個 bigram 模型的 perplexity，perplexity 的計算方式
+如下:
+
+\begin{equation}
+    \text{Perplexity} = 2^{-\text{entropy}}, \text{where entropy} = \frac{1}{N} \sum^{N}_{i=0} \log_{2}(P(w_i|w_{i-1}))
+\end{equation}
+
+當我們使用測試資料去測試模型時，算出的 perplexity 越低時，代表模型認為測試資料中的句子出現的機率越高。
+也就是說當一個語言模型的 perplexity 越低時，模型的 performance 越好。
 
 \section{Experiments}
+
+\subsection{Preprocessing 相關實驗}
+此部分會探討不同 preprocessing 的方法對於 perplexity, F1-score, precision 及 recall
+的影響。
 
 
 

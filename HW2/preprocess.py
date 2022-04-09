@@ -37,13 +37,14 @@ def preprocessing_function(text: str) -> str:
     # Begin your code (Part 0)
     text = text.lower()
     text = text.replace("<br />", " ")
+    preprocessed_text = text
     # text = remove_stopwords(text)
     # stop_word_list = stopwords.words('english')
     # text = "".join([char for char in text if (char not in ['.', ',', "'", '"'])])
-    text = "".join([char for char in text if (char not in string.punctuation)])
-    preprocessed_text = text.split()
-    english_stemmer = SnowballStemmer(language='english')
-    preprocessed_text = [english_stemmer.stem(i) for i in preprocessed_text]
+    # text = "".join([char for char in text if (char not in string.punctuation)])
+    # preprocessed_text = text.split()
+    # english_stemmer = SnowballStemmer(language='english')
+    # preprocessed_text = [english_stemmer.stem(i) for i in preprocessed_text]
     # preprocessed_text = [i for i in preprocessed_text if i not in stop_word_list]
     # text = [english_stemmer.stem(i) for i in text]
     # lemmatizer = WordNetLemmatizer()
