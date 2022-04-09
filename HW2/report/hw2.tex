@@ -105,6 +105,8 @@
 a single man in possession of a good fortune must be in want of a wife." $\rightarrow$
 ``truth univers acknowledg singl man possess good fortun must want wife"}
 
+我也會在下文討論各 preprocessing 的方法對於最終的 F1-Score 的影響。
+
 \section{Implement the bi-gram language model}
 
 本部分介紹 bi-gram model 的實作，因為大部分實作細節都可以在繳交的程式碼中看到，故在此
@@ -115,12 +117,68 @@ a single man in possession of a good fortune must be in want of a wife." $\right
     unigram 的出現頻率，故先 iterate 所有 document 並利用 dict 來統計出現的頻率。
     \item 利用上一個步驟的頻率求出 $P(w_i|w_{i-1})$: 左述之條件機率可由下式得到:
     \begin{equation}
+        \label{eq: P}
         P(w_i|w_{i-1}) = \frac{\text{count}(w_{i-1}, w_i)}{\text{count}(w_{i-1})}
     \end{equation}
     \item 將所有算出的機率利用 Python 內建的 dict 資料結構，
     存為 \texttt{model[$w_{i-1}$][$w_i$]} 的形式，而 feature 則儲存各 bigram
     的頻率 (即為 \texttt{feature[($w_{i-1}$, $w_i$)]})
-
 \end{enumerate}
+
+可以發現若 Eq. \ref{eq: P} 中分子及分母若為 0，則會使機率的計算發生問題，
+於是我在此使用 Add-1 (Laplace) Smoothing 來避免以下問題，Add-1 Smoothing 的具體式子如下:
+
+\begin{equation}
+    \label{eq: add-1}
+    P(w_i|w_{i-1}) = \frac{\text{count}(w_{i-1}, w_i) + 1}{\text{count}(w_{i-1}) + |V|}
+\end{equation}
+
+其中 $|V|$ 為 unique vocabulary 的數量。在使用 Add-1 Smoothing 後，就不會出現先前
+機率出現 0 或無限大的情形。
+
+\section{Implement feature selection and conversion}
+
+我主要使用使用了兩種 feature selection 的方法，第一種方法是按 bigram 的
+出現頻率進行排序。第二種則是 Chi-Square Test 進行 feature selection。第一種方式較為簡單，在此不在贅述。
+接下來會介紹 Chi-Square Test 的實做細節。
+
+\subsection{Chi-Square Test Feature Selection}
+$\chi^2$ 是一個可以計算出特定 feature 對於最終答案 dependent 程度的演算法，對於二元分類問題
+其計算方式如下：
+
+\begin{align*}
+    e_{00}(\text{bigram}) &= \frac{sum_{neg}(sum_{pos}+sum_{neg}-(N_{pos}(\text{bigram})+N_{neg}(\text{bigram})))}{sum_{pos}+sum_{neg}} \\
+    e_{01}(\text{bigram}) &= \frac{sum_{pos}(sum_{pos}+sum_{neg}-(N_{pos}(\text{bigram})+N_{neg}(\text{bigram})))}{sum_{pos}+sum_{neg}} \\
+    e_{10}(\text{bigram}) &= \frac{sum_{neg}(N_{pos}(\text{bigram})+N_{neg}(\text{bigram}))}{sum_{pos}+sum_{neg}} \\
+    e_{11}(\text{bigram}) &= \frac{sum_{pos}(N_{pos}(\text{bigram})+N_{neg}(\text{bigram}))}{sum_{pos}+sum_{neg}} \\
+\end{align*}
+\begin{equation}
+    \begin{aligned}
+        \chi^2(\text{bigram}) = &\frac{(sum_{neg} - N_{neg}(\text{bigram}) - e_{00}(\text{bigram}))^2}{e_{00}(\text{bigram})} \\
+        &+ \frac{(sum_{pos} - N_{pos}(\text{bigram}) - e_{01}(\text{bigram}))^2}{e_{01}(\text{bigram})} \\
+        &+ \frac{(N_{neg}(\text{bigram}) - e_{10}(\text{bigram}))^2}{e_{10}(\text{bigram})} \\
+        &+ \frac{(N_{pos}(\text{bigram}) - e_{11}(\text{bigram}))^2}{e_{11}(\text{bigram})}
+    \end{aligned}    
+\end{equation}
+
+其中 $sum_{pos}$ 為 positive 句子中的 bigram 總和，
+$sum_{neg}$ 為 negative 句子中的 bigram 總和。
+$N_{pos}(\text{bigram})$ 為 $\text{bigram}$ 在 positive 句子出現的次數，
+$N_{neg}(\text{bigram})$ 為 $\text{bigram}$ 在 negative 句子出現的次數。
+
+透過以上方式可以計算出特定 bigram 的 $\chi^2$ score。$\chi^2$ score 越高，代表此 bigram
+對於結果越 dependent，也就代表此 bigram 越有價值。
+
+計算出所有 bigram 的 $\chi^2$ score 後，我們就可以將各 bigram 透過 $\chi^2$ score 從小
+排到大，並取出前 \texttt{feature\_num} 做為 GaussianNB 的輸入。
+
+\section{Experiments}
+
+
+
+\section{Discussion}
+\subsection{}
+
+
 
 \end{document}
