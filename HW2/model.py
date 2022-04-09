@@ -122,30 +122,36 @@ class Ngram:
 
         corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']]
         # begin your code (Part 2)
-        self.model, self.features = self.get_ngram(corpus)
+        # self.model, self.features = self.get_ngram(corpus)
         l = 0
         total = 0
         if self.n == 1:
-             for feature in self.features:
-                x = feature
-                cnt = self.features[feature]
-                l += math.log2(self.model[x]) * cnt
-                total += cnt
+            for document in corpus:
+                for idx in range(len(document)):
+                    x = document[idx]
+                    feature = x
+                    cnt = self.features[feature]
+                    l += math.log2(self.model[x]) * cnt
+                    total += cnt
         elif self.n == 2:
-            for feature in self.features:
-                x = feature[0]
-                y = feature[1]
-                cnt = self.features[feature]
-                l += math.log2(self.model[x][y]) * cnt
-                total += cnt
+            for document in corpus:
+                for idx in range(len(document) - 1):
+                    x = document[idx]
+                    y = document[idx+1]
+                    feature = (x, y)
+                    cnt = self.features[feature]
+                    l += math.log2(self.model[x][y]) * cnt
+                    total += cnt
         elif self.n == 3:
-            for feature in self.features:
-                x = feature[0]
-                y = feature[1]
-                z = feature[2]
-                cnt = self.features[feature]
-                l += math.log2(self.model[(x, y)][z]) * cnt
-                total += cnt
+            for document in corpus:
+                for idx in range(len(document) - 2):
+                    x = document[idx]
+                    y = document[idx+1]
+                    z = document[idx+2]
+                    feature = (x, y, z)
+                    cnt = self.features[feature]
+                    l += math.log2(self.model[(x, y)][z]) * cnt
+                    total += cnt
 
         l /= total
 

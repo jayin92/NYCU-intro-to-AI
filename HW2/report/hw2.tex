@@ -61,7 +61,7 @@
 \date{\today}
 
 \setCJKmainfont{Noto Serif TC}
-\setmonofont[Mapping=tex-text]{Consolas}
+\setmonofont[Mapping=tex-text]{Cascadia Mono}
 
 \XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
 \XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
@@ -107,8 +107,8 @@ a single man in possession of a good fortune must be in want of a wife." $\right
 
 \section{Implement the bi-gram language model}
 
-本部分介紹 bi-gram model 的實作細節，因為大部分實作細節都可以在繳交的程式碼中看到，故在此我只大致說明
-實作內容。
+本部分介紹 bi-gram model 的實作，因為大部分實作細節都可以在繳交的程式碼中看到，故在此
+我只大致說明實作內容。
 
 \begin{enumerate}
     \item 計算各 unigram 及 bigram 的出現頻率: 由於在計算 $P(w_i|w_{i-1})$ 時，需要同時知道 bigram 及
@@ -117,6 +117,10 @@ a single man in possession of a good fortune must be in want of a wife." $\right
     \begin{equation}
         P(w_i|w_{i-1}) = \frac{\text{count}(w_{i-1}, w_i)}{\text{count}(w_{i-1})}
     \end{equation}
+    \item 將所有算出的機率利用 Python 內建的 dict 資料結構，
+    存為 \texttt{model[$w_{i-1}$][$w_i$]} 的形式，而 feature 則儲存各 bigram
+    的頻率 (即為 \texttt{feature[($w_{i-1}$, $w_i$)]})
+
 \end{enumerate}
 
 \end{document}
