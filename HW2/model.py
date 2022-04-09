@@ -67,10 +67,12 @@ class Ngram:
                 else:
                     unigramCnt[document[idx]] = 1
         model = {}
+        self.V = len(unigramCnt.keys())
+        self.tt = total
         if self.n == 1:
             for uni in unigrams:
                 x = uni
-                prob = unigramCnt[x] / total
+                prob = (unigramCnt[x] + 1) / (total + self.V)
                 model[x] = prob
             
             features = OrderedDict(sorted(unigramCnt.items(), key=lambda item: -item[1]))
@@ -79,7 +81,7 @@ class Ngram:
                 x = bigram[0]
                 y = bigram[1]
             
-                prob = bigramCnt[bigram] / unigramCnt[x]
+                prob = (bigramCnt[bigram] + 1) / (unigramCnt[x] + self.V)
                 if x in model:
                     model[x][y] = prob
                 else:
@@ -93,13 +95,18 @@ class Ngram:
                 y = trigram[1]
                 z = trigram[2]
 
-                prob = trigramCnt[trigram] / bigramCnt[(x, y)]
+                prob = (trigramCnt[trigram] + 1) / (bigramCnt[(x, y)] + self.V)
                 if (x, y) in model:
                     model[(x, y)][z] = prob
                 else:
                     model[(x, y)] = dict()
                     model[(x, y)][z] = prob
             features = OrderedDict(sorted(trigramCnt.items(), key=lambda item: -item[1]))
+
+        self.unigramCnt = unigramCnt
+        self.bigramCnt  = bigramCnt
+        self.trigramCnt = trigramCnt
+
         return model, features
         # end your code
     
@@ -130,17 +137,27 @@ class Ngram:
                 for idx in range(len(document)):
                     x = document[idx]
                     feature = x
-                    cnt = self.features[feature]
-                    l += math.log2(self.model[x]) * cnt
+                    if feature in self.features:
+                        cnt = self.features[feature]
+                    else:
+                        cnt = 0
+                    
+                    l += (math.log2((self.unigramCnt[x] + 1 if x in self.unigramCnt else 1)) - math.log2(self.tt + self.V)) * cnt
                     total += cnt
+
         elif self.n == 2:
             for document in corpus:
                 for idx in range(len(document) - 1):
                     x = document[idx]
                     y = document[idx+1]
                     feature = (x, y)
-                    cnt = self.features[feature]
-                    l += math.log2(self.model[x][y]) * cnt
+
+                    if feature in self.features:
+                        cnt = self.features[feature]
+                    else:
+                        cnt = 0
+
+                    l += (math.log2((self.bigramCnt[feature] + 1 if feature in self.bigramCnt else 1)) - math.log2((self.unigramCnt[x] if x in self.unigramCnt else 0) + self.V)) * cnt
                     total += cnt
         elif self.n == 3:
             for document in corpus:
@@ -149,8 +166,11 @@ class Ngram:
                     y = document[idx+1]
                     z = document[idx+2]
                     feature = (x, y, z)
-                    cnt = self.features[feature]
-                    l += math.log2(self.model[(x, y)][z]) * cnt
+                    if feature in self.features:
+                        cnt = self.features[feature]
+                    else:
+                        cnt = 0
+                    l += (math.log2((self.trigramCnt[feature] + 1 if feature in self.trigramCnt else 1)) - math.log2((self.bigramCnt[(x, y)] if (x, y) in self.bigramCnt else 0) + self.V)) * cnt
                     total += cnt
 
         l /= total

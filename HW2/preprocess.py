@@ -57,5 +57,5 @@ def preprocessing_function(text: str) -> str:
     return preprocessed_text
 
 if __name__ == "__main__":
-    s = "it is a truth universally acknowledged that<br /> a single man in possession of a good fortune must be in want of a wife"
+    s = "It is a truth universally acknowledged that<br /> a single man in possession of a good fortune must be in want of a wife."
     print(preprocessing_function(s))

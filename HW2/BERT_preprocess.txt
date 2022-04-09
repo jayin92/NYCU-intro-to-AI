@@ -1,0 +1,1 @@
+Epoch: 0, F1 score: 0.9129, Precision: 0.913, Recall: 0.9129, Loss: 0.2812
