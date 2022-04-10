@@ -34,6 +34,8 @@ def get_argument():
     opt.add_argument("--part",
                         type=int,
                         help="specify the part")
+
+    # Below are the argument I add for testing convinience
     opt.add_argument("--num_features",
                         type=int,
                         help="number of features",
