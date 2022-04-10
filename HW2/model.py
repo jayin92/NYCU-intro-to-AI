@@ -1,11 +1,10 @@
 from itertools import count
-from logging.config import stopListening
+from logging.config import stopListening    
 import math
 from collections import Counter, defaultdict, OrderedDict
 from pydoc import doc
 from typing import List
 from unittest import expectedFailure
-from cv2 import exp
 
 import nltk
 import numpy as np
@@ -35,9 +34,10 @@ class Ngram:
         Compute the co-occurrence of each pair.
         '''
         # begin your code (Part 1)
-        unigramCnt = {}
-        bigramCnt  = {}
-        trigramCnt = {}
+        # init. dicts
+        unigramCnt = defaultdict(int)
+        bigramCnt  = defaultdict(int)
+        trigramCnt = defaultdict(int)
         bigrams    = []
         unigrams   = []
         trigrams   = []
@@ -46,61 +46,42 @@ class Ngram:
             for idx in range(len(document)-1):
                 total += 1
                 if idx != len(document) - 2:
-                    trigram = (document[idx], document[idx+1], document[idx+2])
-                    if trigram in trigramCnt:
-                        trigramCnt[trigram] += 1
-                    else:
-                        trigramCnt[trigram] = 1
+                    trigram = (document[idx], document[idx+1], document[idx+2]) # Generate trigram
+                    trigramCnt[trigram] += 1
+                    trigrams.append(trigram)
                 bigram = (document[idx], document[idx+1])
                 unigrams.append(document[idx])
                 bigrams.append(bigram)
-                trigrams.append(trigram)
 
+                bigramCnt[bigram] += 1
+                unigramCnt[document[idx]] += 1
+        
+        if self.n != 1:
+            model = defaultdict(lambda: defaultdict(int)) # If is not unigram, then use nested dict
+        else:
+            model = defaultdict(int) # If is unigram, then use oridinary dict
 
-                if bigram in bigramCnt:
-                    bigramCnt[bigram] += 1
-                else:
-                    bigramCnt[bigram] = 1
-
-                if document[idx] in unigramCnt:
-                    unigramCnt[document[idx]] += 1
-                else:
-                    unigramCnt[document[idx]] = 1
-        model = {}
-        self.V = len(unigramCnt.keys())
+        self.V = len(unigramCnt.keys()) # For unigram, its V = # of unique vocabulary
         self.tt = total
-        if self.n == 1:
+        if self.n == 1: # unigram
             for uni in unigrams:
-                x = uni
-                prob = (unigramCnt[x] + 1) / (total + self.V)
-                model[x] = prob
+                model[uni] += unigramCnt[uni]
             
-            features = OrderedDict(sorted(unigramCnt.items(), key=lambda item: -item[1]))
-        elif self.n == 2:
+            features = OrderedDict(sorted(unigramCnt.items(), key=lambda item: -item[1])) # Sort features
+        elif self.n == 2: # bigram
             for bigram in bigrams:
                 x = bigram[0]
-                y = bigram[1]
-            
-                prob = (bigramCnt[bigram] + 1) / (unigramCnt[x] + self.V)
-                if x in model:
-                    model[x][y] = prob
-                else:
-                    model[x] = dict()
-                    model[x][y] = prob
+                y = bigram[1]            
+                model[x][y] += 1
             
             features = OrderedDict(sorted(bigramCnt.items(), key=lambda item: -item[1]))
-        elif self.n == 3:
+        elif self.n == 3: # trigram
             for trigram in trigrams:
                 x = trigram[0]
                 y = trigram[1]
                 z = trigram[2]
 
-                prob = (trigramCnt[trigram] + 1) / (bigramCnt[(x, y)] + self.V)
-                if (x, y) in model:
-                    model[(x, y)][z] = prob
-                else:
-                    model[(x, y)] = dict()
-                    model[(x, y)][z] = prob
+                model[(x, y)][z] += 1
             features = OrderedDict(sorted(trigramCnt.items(), key=lambda item: -item[1]))
 
         self.unigramCnt = unigramCnt
@@ -129,7 +110,6 @@ class Ngram:
 
         corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']]
         # begin your code (Part 2)
-        # self.model, self.features = self.get_ngram(corpus)
         l = 0
         total = 0
         if self.n == 1:
@@ -137,13 +117,10 @@ class Ngram:
                 for idx in range(len(document)):
                     x = document[idx]
                     feature = x
-                    if feature in self.features:
-                        cnt = self.features[feature]
-                    else:
-                        cnt = 0
-                    numer = self.unigramCnt[x] + 1 if x in self.unigramCnt else 1
+                    # Add-1 smoothing implementation
+                    numer = self.unigramCnt[x] + 1 if x in self.unigramCnt else 1 
                     domin = self.tt + self.V
-                    l += (math.log2(numer/domin)) * cnt
+                    l += (math.log2(numer/domin))
                     total += 1
 
         elif self.n == 2:
@@ -152,15 +129,14 @@ class Ngram:
                     x = document[idx]
                     y = document[idx+1]
                     feature = (x, y)
-
-                    if feature in self.features:
-                        cnt = self.features[feature]
-                    else:
-                        cnt = 0
+                    # Add-1 smoothing implementation
                     numer = (self.bigramCnt[feature] + 1 if feature in self.bigramCnt else 1)
-                    domin = (self.unigramCnt[x] if x in self.unigramCnt else 0) + self.V
+                    domin = (self.unigramCnt[x] if x in self.unigramCnt else 0) + len(self.model[x].keys())
+                    if domin == 0:
+                        continue # ignore domin = 0 even after smoothing
                     l += math.log2(numer/domin)
                     total += 1
+
         elif self.n == 3:
             for document in corpus:
                 for idx in range(len(document) - 2):
@@ -168,18 +144,17 @@ class Ngram:
                     y = document[idx+1]
                     z = document[idx+2]
                     feature = (x, y, z)
-                    if feature in self.features:
-                        cnt = self.features[feature]
-                    else:
-                        cnt = 0
+                    # Add-1 smoothing implementation
                     numer = self.trigramCnt[feature] + 1 if feature in self.trigramCnt else 1
-                    domin = (self.bigramCnt[(x, y)] if (x, y) in self.bigramCnt else 0) + self.V
-                    l += math.log2(numer/domin) * cnt
+                    domin = (self.bigramCnt[(x, y)] if (x, y) in self.bigramCnt else 1) + len(self.model[(x, y)].keys())
+                    if domin == 0:
+                        continue # ignore domin = 0 even after smoothing
+                    l += math.log2(numer/domin)
                     total += 1
 
         l /= total
 
-        perplexity = pow(2, -l)
+        perplexity = pow(2, -l) # perplexity = 2^(entropy)
 
         return perplexity
 
@@ -204,19 +179,21 @@ class Ngram:
         # begin your code (Part 3)
 
         # step 1. select the most feature_num patterns as features, you can adjust feature_num for better score!
-        feature_num = self.config['num_features']
+        feature_num = self.config['num_features'] # Get number of features from self.config
         # step 2. convert each sentence in both training data and testing data to embedding.
         # Note that you should name "train_corpus_embedding" and "test_corpus_embedding" for feeding the model.
 
-        self.train(df_train)
-        gramIdx = {}
+        self.train(df_train) # Train ngram model using train dataset
+        gramIdx = {} 
         gramPos = {}
         gramNeg = {}
         sumPos = 0
         sumNeg = 0
         train_corpus = [['[CLS]'] + self.tokenize(document) for document in df_train['review']]
         y = list(df_train['sentiment'])
-        if self.n == 1:
+        if self.n == 1:  # uni-gram
+            kBestFeatures = list(self.features.items())[:feature_num] # Use uni-gram that has highest freq. as features
+            #### begin of chi^2 feature selection ####
             for i, document in tqdm(enumerate(train_corpus)):
                 for idx in range(len(document)):
                     unigram = document[idx]
@@ -252,8 +229,10 @@ class Ngram:
 
                 chiFeatures.append((key, chi))
             chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
-            print(chiFeatures[:20])
             kBestFeatures = chiFeatures[:feature_num]
+            #### end of chi^2 feature selection ####
+
+            print(kBestFeatures[:20])
 
             test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
 
@@ -261,9 +240,10 @@ class Ngram:
             test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
 
             for i, pair in enumerate(kBestFeatures):
-                gramIdx[pair[0]] = i
+                gramIdx[pair[0]] = i # Use dict to record the index value of a trigram
             
 
+            # Convert corpus to embedding
             for i, document in tqdm(enumerate(train_corpus)):
                 for idx in range(len(document)):
                     unigram = document[idx]
@@ -275,7 +255,9 @@ class Ngram:
                     unigram = document[idx]
                     if unigram in gramIdx:
                         test_corpus_embedding[i][gramIdx[unigram]] += 1
-        elif self.n == 2:
+        elif self.n == 2: # bi-gram
+            kBestFeatures = list(self.features.items())[:feature_num] # Use bi-gram that has highest freq. as features
+            #### begin of chi^2 feature selection ####
             for i, document in tqdm(enumerate(train_corpus)):
                 for idx in range(len(document)-1):
                     bigram = (document[idx], document[idx+1])
@@ -311,8 +293,10 @@ class Ngram:
 
                 chiFeatures.append((key, chi))
             chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
-            print(chiFeatures[:20])
             kBestFeatures = chiFeatures[:feature_num]
+            #### end of chi^2 feature selection ####
+
+            print(kBestFeatures[:20])
 
             test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
 
@@ -320,9 +304,9 @@ class Ngram:
             test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
 
             for i, pair in enumerate(kBestFeatures):
-                gramIdx[pair[0]] = i
+                gramIdx[pair[0]] = i # Use dict to record the index value of a trigram
             
-
+            # Convert corpus to embedding
             for i, document in tqdm(enumerate(train_corpus)):
                 for idx in range(len(document)-1):
                     bigram = (document[idx], document[idx+1])
@@ -334,7 +318,9 @@ class Ngram:
                     bigram = (document[idx], document[idx+1])
                     if bigram in gramIdx:
                         test_corpus_embedding[i][gramIdx[bigram]] += 1
-        elif self.n == 3:
+        elif self.n == 3: # tri-gram
+            kBestFeatures = list(self.features.items())[:feature_num] # Use uni-gram that has highest freq. as features
+            #### begin of chi^2 feature selection ####
             for i, document in tqdm(enumerate(train_corpus)):
                 for idx in range(len(document)-2):
                     trigram = (document[idx], document[idx+1], document[idx+2])
@@ -370,8 +356,9 @@ class Ngram:
 
                 chiFeatures.append((key, chi))
             chiFeatures = sorted(chiFeatures, key=lambda pair: -pair[1])
-            print(chiFeatures[:20])
             kBestFeatures = chiFeatures[:feature_num]
+            #### end of chi^2 feature selection ####
+            print(kBestFeatures[:20])
 
             test_corpus = [['[CLS]'] + self.tokenize(document) for document in df_test['review']] 
 
@@ -379,9 +366,9 @@ class Ngram:
             test_corpus_embedding = [[0] * len(kBestFeatures) for _ in range(len(df_test['review']))]
 
             for i, pair in enumerate(kBestFeatures):
-                gramIdx[pair[0]] = i
+                gramIdx[pair[0]] = i # Use dict to record the index value of a trigram
             
-
+            # Convert corpus to embedding
             for i, document in tqdm(enumerate(train_corpus)):
                 for idx in range(len(document)-2):
                     trigram = (document[idx], document[idx+1], document[idx+2])
@@ -394,6 +381,7 @@ class Ngram:
                     if trigram in gramIdx:
                         test_corpus_embedding[i][gramIdx[trigram]] += 1
         # end your code
+
         # feed converted embeddings to Naive Bayes
         nb_model = GaussianNB()
         nb_model.fit(train_corpus_embedding, df_train['sentiment'])
