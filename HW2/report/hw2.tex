@@ -192,7 +192,7 @@ $N_{neg}(\text{bi-gram})$ 為 $\text{bi-gram}$ 在 negative 句子出現的次�
 如下:
 
 \begin{equation}
-    \text{Perplexity} = 2^{-\text{entropy}}, \text{where entropy} = \frac{1}{N} \sum^{N}_{i=0} \log_{2}(P(w_i|w_{i-1}))
+    \text{Perplexity} = 2^{\text{entropy}}, \text{where entropy} = \frac{1}{N} \sum^{N}_{i=0} -\log_{2}(P(w_i|w_{i-1}))
 \end{equation}
 
 當我們使用測試資料去測試模型時，算出的 perplexity 越低時，代表模型認為測試資料中的句子出現的機率越高。
@@ -201,7 +201,7 @@ $N_{neg}(\text{bi-gram})$ 為 $\text{bi-gram}$ 在 negative 句子出現的次�
 \section{實驗和比較}
 
 \subsection{Preprocessing 相關實驗}
-此部分會探討不同 preprocessing 的方法對於 perplexity, F1-score, precision 及 recall
+此部分會探討不同 preprocessing 的方法對於 perplexity 及 F1-score
 的影響。
 
 本次作業中，我主要實作了四種 preprocessing 的方法，並透過結合這四種方法，訓練出了七種不同的 bi-gram 模型 
@@ -210,20 +210,27 @@ $N_{neg}(\text{bi-gram})$ 為 $\text{bi-gram}$ 在 negative 句子出現的次�
 
 \begin{table}[H]
     \centering
-    \caption{不同 preprocessing 的組合之 perplexity 及 F1-score}
-    \begin{tabular}{|c|c|c|c|c|c|}
+    \caption{不同 preprocessing 的組合之 Perplexity, F1-score, Precision 及 Recall}
+    \begin{tabular}{|c|c|c|c|c|c|c|c|} 
     \hline
-    Remove \textless{}br /\textgreater{} & Remove stopwords & Remove punctuations & Stemming & Perplexity       & F1-score        \\ \hline
-                                         &                  &                     &          & \textbf{134.287} & 0.7596          \\ \hline
-    \checkmark                                   &                  &                     &          & 148.447          & 0.765           \\ \hline
-    \checkmark                                   & \checkmark               &                     &          & 320.902          & 0.7379          \\ \hline
-    \checkmark	                                   &                  & \checkmark                  &          & 172.528          & 0.7787          \\ \hline
-    \checkmark                                   &                  &                     & \checkmark       & 152.991          & 0.7797          \\ \hline
-    \checkmark                                   & \checkmark               & \checkmark                  & \checkmark       & 433.002          & 0.7371          \\ \hline
-    \checkmark                                   &                  & \checkmark                  & \checkmark       & 174.381          & \textbf{0.7881} \\ \hline
+    \begin{tabular}[c]{@{}c@{}}\textbf{Remove}\\\textbf{\textless{}br /\textgreater{}}\end{tabular} & \begin{tabular}[c]{@{}c@{}}\textbf{Remove}\\\textbf{stopwords}\end{tabular} & \begin{tabular}[c]{@{}c@{}}\textbf{Remove}\\\textbf{punctuations}\end{tabular} & \textbf{Stemming}         & \textbf{Perplexity} & \textbf{F1-score} & \textbf{Precision} & \textbf{Recall}  \\ 
+    \hline
+                                                                                                    &                                                                             &                                                                                &                           & \textbf{134.287}    & 0.7596            & 0.7878             & 0.7645           \\ 
+    \hline
+    \checkmark                                                                       &                                                                             &                                                                                &                           & 148.447             & 0.765             & 0.7934             & 0.7697           \\ 
+    \hline
+    \checkmark                                                                       & \checkmark                                                   &                                                                                &                           & 320.902             & 0.7379            & 0.7766             & 0.7453           \\ 
+    \hline
+    \checkmark                                                                       &                                                                             & \checkmark                                                      &                           & 172.528             & 0.7787            & 0.8025             & 0.7824           \\ 
+    \hline
+    \checkmark                                                                       &                                                                             &                                                                                & \checkmark & 152.991             & 0.7797            & 0.8025             & 0.7832           \\ 
+    \hline
+    \checkmark                                                                       & \checkmark                                                   & \checkmark                                                      & \checkmark & 433.002             & 0.7371            & 0.7796             & 0.7452           \\ 
+    \hline
+    \checkmark                                                                       &                                                                             & \checkmark                                                      & \checkmark & 174.381             & \textbf{0.7881}   & \textbf{0.8084}    & \textbf{0.7911}  \\
+    \hline
     \end{tabular}
 \end{table}
-
 可以發現 performance 最高的 preprocessing 方法為為轉為小寫 + 移除 br + 標點符號 + SnowballStemmer，
 其 F1-score 為 0.7881。下文若有提到 preprocessing 則我都是使用此種方式。
 
@@ -234,7 +241,7 @@ $N_{neg}(\text{bi-gram})$ 為 $\text{bi-gram}$ 在 negative 句子出現的次�
 
 
 \subsection{Feature Selection 相關實驗}
-此部分會探討不同 feature selection 的方式對於 perplexity, F1-score, precision 及 recall
+此部分會探討不同 feature selection 的方式對於 F1-score, precision 及 recall
 的影響。
 
 在本次作業中，我主要實作了兩種 feature selection 的方法:
@@ -326,22 +333,55 @@ Chi-Square Test 的執行時間不長，在我的電腦上大約只需運行 10 
 較流行且 performance 較好的 BERT 進行比較。
 
 我分別測試了 uni/bi/tri-gram 經過 preprocessing 的模型，feature 數量固定為 500，
-並將其與 w/ 和 w/o preprocessing 的 DistilBert 進行比較，下圖為 F1-score 之比較表:
+並將其與 w/ 和 w/o preprocessing 的 DistilBert 進行比較，下表為 
+Perplexity, F1-score, Precision 及 Recall 之比較表:
 
-% Please add the following required packages to your document preamble:
-% \usepackage{booktabs}
+
 \begin{table}[H]
     \centering
-    \caption{六種不同 model 的 F1-score}
-    \begin{tabular}{@{}cc@{}}
+    \caption{六種不同 model 的 Perplexity, F1-score, Precision 及 Recall}
+    \begin{tabular}{ccccc} 
     \toprule
-    \textbf{Model}                                 & \textbf{F1-score} \\ \midrule
-    uni-gram                                       & 0.829             \\
-    bi-gram                                        & 0.7881            \\
-    tri-gram                                       & 0.7146            \\
-    BERT w/o preprocessing                         & 0.9337   \\
-    BERT w/ preprocessing                          & 0.9129            \\
-    BERT only remove \textless{}br /\textgreater{} & \textbf{0.9372}            \\ \bottomrule
+          Model                 & Perplexity      & F1-score        & Precision       & Recall           \\ 
+    \hline
+    uni-gram               & 914.279         & 0.829           & 0.8293          & 0.829            \\
+    bi-gram                & 174.381         & 0.7881          & 0.8084          & 0.7911           \\
+    tri-gram               & \textbf{21.906} & 0.7146          & 0.7741          & 0.7269           \\
+    BERT w/o preprocessing & x               & 0.9337          & 0.9337          & 0.9337           \\
+    BERT w/ preprocessing  & x               & 0.9129          & 0.913           & 0.9129           \\
+    BERT only remove br /  & x               & \textbf{0.9372} & \textbf{0.9374} & \textbf{0.9372}  \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{Uni-gram, bi-gram, tri-gram 使用 Chi-Square FS 的方法取出的前 20 個 features}
+    \begin{tabular}{ccc} 
+    \toprule
+    \textbf{uni-gram} & \textbf{bi-gram}      & \textbf{tri-gram}         \\ 
+    \hline
+    bad               & ('the', 'worst')      & ('of', 'the', 'best')     \\
+    worst             & ('wast', 'of')        & ('of', 'the', 'worst')    \\
+    great             & ('a', 'great')        & ('the', 'worst', 'movi')  \\
+    wast              & ('the', 'best')       & ('suppos', 'to', 'be')    \\
+    love              & ('is', 'a')           & ('wast', 'of', 'time')    \\
+    aw                & ('worst', 'movi')     & ('a', 'wast', 'of')       \\
+    and               & ('so', 'bad')         & ('wast', 'your', 'time')  \\
+    poor              & ('suppos', 'to')      & ('the', 'worst', 'film')  \\
+    movi              & ('look', 'like')      & ('is', 'one', 'of')       \\
+    terribl           & ('at', 'all')         & ('dont', 'wast', 'your')  \\
+    no                & ('the', 'onli')       & ('is', 'a', 'great')      \\
+    stupid            & ('this', 'movi')      & ('worst', 'movi', 'i')    \\
+    excel             & ('high', 'recommend') & ('is', 'the', 'worst')    \\
+    bore              & ('bad', 'movi')       & ('i', 'love', 'this')     \\
+    his               & ('wast', 'your')      & ('this', 'piec', 'of')    \\
+    horribl           & ('not', 'even')       & ('this', 'is', 'a')       \\
+    best              & ('a', 'bad')          & ('one', 'of', 'the')      \\
+    perfect           & ('worst', 'film')     & ('it', 'is', 'a')         \\
+    beauti            & ('a', 'wast')         & ('one', 'of', 'my')       \\
+    just              & ('your', 'time')      & ('a', 'must', 'see')      \\
+    \bottomrule
     \end{tabular}
 \end{table}
 
@@ -351,7 +391,7 @@ Chi-Square Test 的執行時間不長，在我的電腦上大約只需運行 10 
 模型即可以很好的處理此任務。
 
 值得注意的是，DistilBert 在經過 preprocessing 後，F1-score 反而還變得比較低，
-於是我又在另外訓練一個只將 <br /> tag (不轉成小寫) 移除的模型，可以發現其 performance 是最好的，
+於是我又在另外訓練一個只將 <br /> tag 移除 (不將英文字母轉成小寫) 的模型，可以發現其 performance 是最好的，
 F1-score 為 0.9372。
 
 我認為其原因可能是因為 DistilBert 本身就可以判斷哪些字詞是可以用來判斷情緒，哪些是不行的，移除所有標點符號和
