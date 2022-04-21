@@ -105,14 +105,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (par1-1)
     """
-    def minimax(self, gameState, depth, maximize):
-        if depth == 0:
-            return self.evaluationFunction(gameState)
-        else:
-            if maximize:
-                return max(self.minimax(gameState.getNextState(0, action), depth - 1, False) for action in gameState.getLegalActions(0))
-            else:
-                return min(self.minimax(gameState.getNextState(0, action), depth - 1, True) for action in gameState.getLegalActions(0))
     def getAction(self, gameState):
         """
         Returns the minimax action from the current gameState using self.depth
@@ -138,25 +130,74 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        
-        util.raiseNotDefined()  
+        actions = gameState.getLegalActions(0)
+        candidates = []
+        for action in actions:
+            candidates.append((action, self.minimax(gameState.getNextState(0, action), self.depth-1, 1, False)))
+        action, _ = max(candidates, key=lambda item: item[1][1])
+        # print(f"action: {action}")
+        return action
         # End your code
-
+    def minimax(self, gameState, depth, agentIdx, maximize):
+        if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0):
+            return (gameState, self.evaluationFunction(gameState))
+        actions = gameState.getLegalActions(agentIdx)
+        candidates = []
+        if maximize:
+            for action in actions:
+                candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
+            stateScore = max(candidates, key=lambda item: item[1])
+            
+        elif agentIdx < gameState.getNumAgents()-1:
+            for action in actions:
+                candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
+            stateScore = min(candidates, key=lambda item: item[1])
+        else:
+            for action in actions:
+                candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth, 0, True))
+            stateScore = min(candidates, key=lambda item: item[1])
+        
+        return stateScore
+            
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (part1-2)
     """
-
+    def expectimax(self, gameState, depth, agentIdx, maximize):
+        if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0):
+            return (gameState, self.evaluationFunction(gameState))
+        actions = gameState.getLegalActions(agentIdx)
+        candidates = []
+        if maximize:
+            for action in actions:
+                candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
+            stateScore = max(candidates, key=lambda item: item[1])
+            
+        elif agentIdx < gameState.getNumAgents()-1:
+            for action in actions:
+                candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
+            stateScore = random.choice(candidates)
+        else:
+            for action in actions:
+                candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth, 0, True))
+            stateScore = random.choice(candidates)
+            
+        return stateScore 
     def getAction(self, gameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
 
-        All ghosts should be modeled as choosing uniformly at random from their
+        All ghosts should be modeled as choosing :uniformly at random from their
         legal moves.
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        util.raiseNotDefined()  
+        actions = gameState.getLegalActions(0)
+        candidates = []
+        for action in actions:
+            candidates.append((action, self.expectimax(gameState.getNextState(0, action), self.depth-1, 1, False)))
+        action, _ = max(candidates, key=lambda item: item[1][1])
+        return action
         # End your code
 
 def betterEvaluationFunction(currentGameState):
