@@ -105,6 +105,14 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
     Your minimax agent (par1-1)
     """
+    def minimax(self, gameState, depth, maximize):
+        if depth == 0:
+            return self.evaluationFunction(gameState)
+        else:
+            if maximize:
+                return max(self.minimax(gameState.getNextState(0, action), depth - 1, False) for action in gameState.getLegalActions(0))
+            else:
+                return min(self.minimax(gameState.getNextState(0, action), depth - 1, True) for action in gameState.getLegalActions(0))
     def getAction(self, gameState):
         """
         Returns the minimax action from the current gameState using self.depth
@@ -130,6 +138,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
+        
         util.raiseNotDefined()  
         # End your code
 
