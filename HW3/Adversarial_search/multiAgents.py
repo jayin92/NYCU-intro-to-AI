@@ -165,24 +165,25 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
     def expectimax(self, gameState, depth, agentIdx, maximize):
         if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0):
-            return (gameState, self.evaluationFunction(gameState))
+            return self.evaluationFunction(gameState)
         actions = gameState.getLegalActions(agentIdx)
         candidates = []
         if maximize:
             for action in actions:
                 candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
-            stateScore = max(candidates, key=lambda item: item[1])
-            
+            score = max(candidates)
         elif agentIdx < gameState.getNumAgents()-1:
+            tmp = 0
             for action in actions:
-                candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
-            stateScore = random.choice(candidates)
+                tmp += (self.expectimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
+            score = tmp / len(actions)
         else:
+            tmp = 0
             for action in actions:
-                candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth, 0, True))
-            stateScore = random.choice(candidates)
-            
-        return stateScore 
+                tmp += (self.expectimax(gameState.getNextState(agentIdx, action), depth, 0, True))
+            score = tmp / len(actions)
+           
+        return score 
     def getAction(self, gameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
@@ -196,7 +197,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         candidates = []
         for action in actions:
             candidates.append((action, self.expectimax(gameState.getNextState(0, action), self.depth-1, 1, False)))
-        action, _ = max(candidates, key=lambda item: item[1][1])
+        action,  _= max(candidates, key=lambda item: item[1])
         return action
         # End your code
 
