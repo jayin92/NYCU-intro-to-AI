@@ -68,7 +68,20 @@ class ValueIterationAgent(ValueEstimationAgent):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
         # Begin your code
-        util.raiseNotDefined() 
+        for t in range(1, self.iterations+1):
+            previous_value = self.values.copy()
+            for state in self.mdp.getStates():
+                if self.mdp.isTerminal(state):
+                    self.values[state] = 0
+                    continue
+                maxi_value = -1e9;
+                for action in self.mdp.getPossibleActions(state):
+                    sumOfAllState = 0
+                    for (nextState, prob) in self.mdp.getTransitionStatesAndProbs(state, action):
+                        sumOfAllState += prob * (self.mdp.getReward(state, action, nextState) + self.discount*previous_value[nextState])
+                    maxi_value = max(maxi_value, sumOfAllState)
+                self.values[state] = maxi_value
+                
         # End your code
 
 
@@ -86,7 +99,10 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        util.raiseNotDefined()  
+        res = 0
+        for (nextState, prob) in self.mdp.getTransitionStatesAndProbs(state, action):
+            res += prob * (self.mdp.getReward(state, action, nextState) + self.discount*self.values[nextState])
+        return res
         # End your code
 
     def computeActionFromValues(self, state):
@@ -100,9 +116,16 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-
         #check for terminal
-        util.raiseNotDefined() 
+        if self.mdp.isTerminal(state):
+            return None
+        actions = self.mdp.getPossibleActions(state)
+        qValues = util.Counter()
+        for action in actions:
+            qValues[action] = self.getQValue(state, action)
+        
+        return qValues.argMax()
+        
         # End your code
 
     def getPolicy(self, state):
