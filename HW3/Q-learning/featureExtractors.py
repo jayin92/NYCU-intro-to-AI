@@ -75,9 +75,9 @@ class SimpleExtractor(FeatureExtractor):
     def getFeatures(self, state, action):
         # extract the grid of food and wall locations and get the ghost locations
         food = state.getFood()
+        capsules = state.getCapsules()
         walls = state.getWalls()
         ghosts = state.getGhostPositions()
-
         features = util.Counter()
 
         features["bias"] = 1.0
@@ -88,16 +88,34 @@ class SimpleExtractor(FeatureExtractor):
         next_x, next_y = int(x + dx), int(y + dy)
 
         # count the number of ghosts 1-step away
-        features["#-of-ghosts-1-step-away"] = sum((next_x, next_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)
-
+        features["#-of-ghosts-1-step-away"] = sum(((next_x, next_y) in Actions.getLegalNeighbors(g, walls) and state.data.agentStates[i+1].scaredTimer == 0) for i, g in enumerate(ghosts))
         # if there is no danger of ghosts then add the food feature
         if not features["#-of-ghosts-1-step-away"] and food[next_x][next_y]:
             features["eats-food"] = 1.0
 
         dist = closestFood((next_x, next_y), food, walls)
+        dist_cap = None
+        dist_scared = None
+        if len(capsules) != 0:
+            dist_cap = abs(next_x-capsules[0][0]) + abs(next_y-capsules[0][1])
+            for cap in capsules[1:]:
+                dist_cap = min(dist_cap, abs(next_x-cap[0]) + abs(next_y-cap[1]))
+
+        for i in range(1, len(ghosts)):
+            if state.data.agentStates[i+1].scaredTimer != 0:
+                if dist_scared == None:
+                    dist_scared = abs(next_x-ghosts[i][0]) + abs(next_y-ghosts[i][1])
+                else:
+                    dist_scared = min(dist_scared, abs(next_x-ghosts[i][0]) + abs(next_y-ghosts[i][1]))
         if dist is not None:
             # make the distance a number less than one otherwise the update
             # will diverge wildly
             features["closest-food"] = float(dist) / (walls.width * walls.height)
+
+        if dist_cap is not None and dist_scared is None:
+            features["closet-capsule"] = float(dist_cap) / (walls.width * walls.height) * 0.1
+
+        if dist_scared is not None:
+            features["closet-scared"] = float(dist_scared) / (walls.width * walls.height) * 0.1
         features.divideAll(10.0)
         return features
