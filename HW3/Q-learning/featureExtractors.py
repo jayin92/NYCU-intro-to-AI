@@ -63,6 +63,52 @@ def closestFood(pos, food, walls):
     # no food found
     return None
 
+def closestCap(pos, caps, walls):
+    """
+    closestCap -- this is similar to the function that we have
+    worked on in the search project; here its all in one place
+    """
+    fringe = [(pos[0], pos[1], 0)]
+    expanded = set()
+    while fringe:
+        pos_x, pos_y, dist = fringe.pop(0)
+        if (pos_x, pos_y) in expanded:
+            continue
+        expanded.add((pos_x, pos_y))
+        # if we find a food at this location then exit
+        for cap in caps:
+            if pos_x == cap[0] and pos_y == cap[1]:
+                return dist
+        # otherwise spread out from the location to its neighbours
+        nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
+        for nbr_x, nbr_y in nbrs:
+            fringe.append((nbr_x, nbr_y, dist+1))
+    # no food found
+    return None
+
+def closestGhost(pos, ghosts, state, walls):
+    """
+    closestGhost -- this is similar to the function that we have
+    worked on in the search project; here its all in one place
+    """
+    fringe = [(pos[0], pos[1], 0)]
+    expanded = set()
+    while fringe:
+        pos_x, pos_y, dist = fringe.pop(0)
+        if (pos_x, pos_y) in expanded:
+            continue
+        expanded.add((pos_x, pos_y))
+        # if we find a food at this location then exit
+        for i in range(len(ghosts)):
+            if pos_x == ghosts[i][0] and pos_y == ghosts[i][1] and state.data.agentStates[i+1].scaredTimer != 0:
+                return dist
+        # otherwise spread out from the location to its neighbours
+        nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
+        for nbr_x, nbr_y in nbrs:
+            fringe.append((nbr_x, nbr_y, dist+1))
+    # no food found
+    return None
+
 class SimpleExtractor(FeatureExtractor):
     """
     Returns simple features for a basic reflex Pacman:
@@ -79,7 +125,6 @@ class SimpleExtractor(FeatureExtractor):
         walls = state.getWalls()
         ghosts = state.getGhostPositions()
         features = util.Counter()
-
         features["bias"] = 1.0
 
         # compute the location of pacman after he takes the action
@@ -94,28 +139,18 @@ class SimpleExtractor(FeatureExtractor):
             features["eats-food"] = 1.0
 
         dist = closestFood((next_x, next_y), food, walls)
-        dist_cap = None
-        dist_scared = None
-        if len(capsules) != 0:
-            dist_cap = abs(next_x-capsules[0][0]) + abs(next_y-capsules[0][1])
-            for cap in capsules[1:]:
-                dist_cap = min(dist_cap, abs(next_x-cap[0]) + abs(next_y-cap[1]))
+        dist_cap = closestCap((next_x, next_y), capsules, walls)
+        dist_scared = closestGhost((next_x, next_y), ghosts, state, walls)
 
-        for i in range(1, len(ghosts)):
-            if state.data.agentStates[i+1].scaredTimer != 0:
-                if dist_scared == None:
-                    dist_scared = abs(next_x-ghosts[i][0]) + abs(next_y-ghosts[i][1])
-                else:
-                    dist_scared = min(dist_scared, abs(next_x-ghosts[i][0]) + abs(next_y-ghosts[i][1]))
         if dist is not None:
             # make the distance a number less than one otherwise the update
             # will diverge wildly
-            features["closest-food"] = float(dist) / (walls.width * walls.height)
-
+            features["closest-food"] = float(dist) / (walls.width * walls.height) * 2.5
         if dist_cap is not None and dist_scared is None:
-            features["closet-capsule"] = float(dist_cap) / (walls.width * walls.height) * 0.1
+            features["closet-capsule"] = float(dist_cap) / (walls.width * walls.height) * 10
 
         if dist_scared is not None:
-            features["closet-scared"] = float(dist_scared) / (walls.width * walls.height) * 0.1
+            features["closet-scared"] = float(dist_scared) / (walls.width * walls.height)
         features.divideAll(10.0)
+        # print(features["closet-scared"])
         return features
