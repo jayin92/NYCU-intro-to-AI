@@ -143,13 +143,13 @@ class MinimaxAgent(MultiAgentSearchAgent):
         actions = gameState.getLegalActions(agentIdx) # Get legal action of a character (pacman or ghosts)
         candidates = [] # Initialize a list to track legal action and its corresponding score
         if maximize: # If current layer is a max layer
-            # Becuase current layer is a max layer, the next layer will be a min layer with the first ghost whose index equals to 1.
+            # Becuase current layer is a max layer, the next layer will be a min layer with the first ghost whose index equals to 1. And new depth needs to be subtracted 1.
             for action in actions:
                 candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
             stateScore = max(candidates, key=lambda item: item[1]) # Max layer, take max over the candidates' score
             
         elif agentIdx < gameState.getNumAgents()-1: # If current layer is a min layer, and current ghost is not the last ghosts
-            # Because current layer is a min layer and current ghost is not the last ghost, the next layer will still a min layer with a ghost whose index is the current index + 1
+            # Because current layer is a min layer and current ghost is not the last ghost, the next layer will still a min layer with the ghost whose index is the current index + 1
             for action in actions:
                 candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
             stateScore = min(candidates, key=lambda item: item[1]) # Min layer, take min over the candidates' score
@@ -165,27 +165,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (part1-2)
     """
-    def expectimax(self, gameState, depth, agentIdx, maximize):
-        if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0):
-            return self.evaluationFunction(gameState)
-        actions = gameState.getLegalActions(agentIdx)
-        candidates = []
-        if maximize:
-            for action in actions:
-                candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
-            score = max(candidates)
-        elif agentIdx < gameState.getNumAgents()-1:
-            tmp = 0
-            for action in actions:
-                tmp += (self.expectimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
-            score = tmp / len(actions)
-        else:
-            tmp = 0
-            for action in actions:
-                tmp += (self.expectimax(gameState.getNextState(agentIdx, action), depth, 0, True))
-            score = tmp / len(actions)
-           
-        return score 
+    # The code in expectimax is almost same as in minimax algorithms, therefore I will only explain the different part, that is, the calculatoin of value in min layer.
     def getAction(self, gameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
@@ -202,19 +182,42 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         action,  _= max(candidates, key=lambda item: item[1])
         return action
         # End your code
+    def expectimax(self, gameState, depth, agentIdx, maximize):
+        if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0):
+            return self.evaluationFunction(gameState)
+        actions = gameState.getLegalActions(agentIdx)
+        candidates = []
+        if maximize:
+            for action in actions:
+                candidates.append(self.expectimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
+            score = max(candidates)
+        elif agentIdx < gameState.getNumAgents()-1:
+            # Instead of taking the min value over the candidates, in expectimax algorithm, we will take the average instead.
+            tmp = 0 # Initailze the variable to sum all possible score.
+            for action in actions:
+                tmp += (self.expectimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False)) 
+            score = tmp / len(actions) # Take average.
+        else:
+            # Same as above
+            tmp = 0
+            for action in actions:
+                tmp += (self.expectimax(gameState.getNextState(agentIdx, action), depth, 0, True))
+            score = tmp / len(actions)
+           
+        return score 
 
 def closestFood(pos, food, walls):
     """
-    closestFood -- this is similar to the function that we have
-    worked on in the search project; here its all in one place
+    This function is actually from the q-learning part.
+    It uses BFS to find the closest food.
     """
-    fringe = [(pos[0], pos[1], 0)]
-    expanded = set()
-    while fringe:
-        pos_x, pos_y, dist = fringe.pop(0)
-        if (pos_x, pos_y) in expanded:
+    fringe = [(pos[0], pos[1], 0)] # Initalize a list. This list will be later used as a queue.
+    expanded = set() # Initialize a set to track the visited positions
+    while fringe: # While queue is not empty
+        pos_x, pos_y, dist = fringe.pop(0) # Pop the first element in queue
+        if (pos_x, pos_y) in expanded: # If this position has already visited
             continue
-        expanded.add((pos_x, pos_y))
+        expanded.add((pos_x, pos_y)) # Add current postion to visited set
         # if we find a food at this location then exit
         if food[pos_x][pos_y]:
             return dist
@@ -234,20 +237,25 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
     # Begin your code
+    # If the current game state is a loss state, then return a small value to avoid this game state happened
+    # This make the game very hard to lose
     if currentGameState.isLose():
         return -1e20
+    # Otherwise, if this game state is a win state, then return a large value
     elif currentGameState.isWin():
         return 1e20
-    score = currentGameState.getScore()
-    cnt_food = currentGameState.getNumFood()
-    cnt_cap  = len(currentGameState.getCapsules())
-    dis = closestFood(currentGameState.getPacmanPosition(), currentGameState.getFood(), currentGameState.getWalls())
-    val = 1 * score
-    if dis is not None:
-        val -= 10 * dis
-    val -= cnt_food * 100
-    val -= 30 * cnt_cap
-    return val
+
+    
+    score = currentGameState.getScore() # get current score of the game
+    cnt_food = currentGameState.getNumFood() # get the number of remaining food
+    cnt_cap  = len(currentGameState.getCapsules()) # get the number of remaining capsules
+    dis = closestFood(currentGameState.getPacmanPosition(), currentGameState.getFood(), currentGameState.getWalls()) # call function closestFood to get the distance of the closest food
+    val = 1 * score # Initialize the return value with 1 * score
+    if dis is not None: # If dis is not None
+        val -= 10 * dis # Because we want to minimize the distance between pacman and food. Therefore, if the distance is smaller, then the return value will be higher.
+    val -= cnt_food * 100 # Same as closest food. We also want to minimize the number of food. In this way, the pacman will eat food instead of stay in one place. Therefore, fewer food will have higher value.
+    val -= 30 * cnt_cap # Same as food, but the weight is slightly different
+    return val # return the final value
     # End your code
 
 # Abbreviation
