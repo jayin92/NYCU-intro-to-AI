@@ -130,34 +130,36 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        actions = gameState.getLegalActions(0)
-        candidates = []
-        for action in actions:
-            candidates.append((action, self.minimax(gameState.getNextState(0, action), self.depth-1, 1, False)))
-        action, _ = max(candidates, key=lambda item: item[1][1])
-        # print(f"action: {action}")
-        return action
+        actions = gameState.getLegalActions(0) # Get Legal Action of pacman (pacman's index is 0)
+        candidates = [] # Initialize a list to track legal action and its score for the first max layer.
+        for action in actions: # Iterate all possible action
+            candidates.append((action, self.minimax(gameState.getNextState(0, action), self.depth-1, 1, False))) # Call recursive function self.minimax
+        action, _ = max(candidates, key=lambda item: item[1][1]) # Get the action with the highest score
+        return action # return that action
         # End your code
     def minimax(self, gameState, depth, agentIdx, maximize):
-        if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0):
-            return (gameState, self.evaluationFunction(gameState))
-        actions = gameState.getLegalActions(agentIdx)
-        candidates = []
-        if maximize:
+        if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0): # If current game state is terminal state
+            return (gameState, self.evaluationFunction(gameState)) # return (state, score) pair
+        actions = gameState.getLegalActions(agentIdx) # Get legal action of a character (pacman or ghosts)
+        candidates = [] # Initialize a list to track legal action and its corresponding score
+        if maximize: # If current layer is a max layer
+            # Becuase current layer is a max layer, the next layer will be a min layer with the first ghost whose index equals to 1.
             for action in actions:
                 candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
-            stateScore = max(candidates, key=lambda item: item[1])
+            stateScore = max(candidates, key=lambda item: item[1]) # Max layer, take max over the candidates' score
             
-        elif agentIdx < gameState.getNumAgents()-1:
+        elif agentIdx < gameState.getNumAgents()-1: # If current layer is a min layer, and current ghost is not the last ghosts
+            # Because current layer is a min layer and current ghost is not the last ghost, the next layer will still a min layer with a ghost whose index is the current index + 1
             for action in actions:
                 candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
-            stateScore = min(candidates, key=lambda item: item[1])
-        else:
+            stateScore = min(candidates, key=lambda item: item[1]) # Min layer, take min over the candidates' score
+        else: # If current layer is a min layer, and current ghost is the last ghost
+            # Current ghost is the last ghost, the next layer will a max layer with the pacman, whose index eqauls to 1
             for action in actions:
                 candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth, 0, True))
-            stateScore = min(candidates, key=lambda item: item[1])
+            stateScore = min(candidates, key=lambda item: item[1]) # Min layer, take min over the candidates' score
         
-        return stateScore
+        return stateScore # Return (state, score) pair
             
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
