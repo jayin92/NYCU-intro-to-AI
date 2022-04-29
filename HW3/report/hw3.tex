@@ -1,0 +1,146 @@
+\documentclass{article}[12pt]
+\usepackage{fontspec}   %加這個就可以設定字體
+\usepackage{xeCJK}       %讓中英文字體分開設置
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage[newfloat]{minted}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pifont}
+\usepackage{amssymb}
+
+\usepackage[breakable, listings, skins, minted]{tcolorbox}
+\usepackage{etoolbox}
+\setminted{fontsize=\footnotesize}
+\renewtcblisting{minted}{%
+    listing engine=minted,
+    minted language=python,
+    listing only,
+    breakable,
+    enhanced,
+    minted options = {
+        linenos, 
+        breaklines=true, 
+        breakbefore=., 
+        % fontsize=\footnotesize, 
+        numbersep=2mm
+    },
+    overlay={%
+        \begin{tcbclipinterior}
+            \fill[gray!25] (frame.south west) rectangle ([xshift=4mm]frame.north west);
+        \end{tcbclipinterior}
+    }   
+}
+
+\usepackage[
+  top=2cm,
+  bottom=2cm,
+  left=3.5cm,
+  right=3.5cm,
+  headheight=17pt, % as per the warning by fancyhdr
+  includehead,includefoot,
+  heightrounded, % to avoid spurious underfull messages
+]{geometry} 
+
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Code}
+
+
+\title{人工智慧概論 HW3 報告}
+\author{110550088 李杰穎}
+\date{\today}
+
+\setCJKmainfont{Noto Serif TC}
+\setmonofont[Mapping=tex-text]{Consolas}
+
+\XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
+\XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{2em}
+\renewcommand{\baselinestretch}{1.5}
+\begin{document}
+
+\maketitle
+
+\section{Adversarial Search}
+\subsection{Implementation of Minimax and Expectimax Algorithms}
+\begin{code}
+\captionof{listing}{Minimax Algorithm}
+\begin{minted}
+class MinimaxAgent(MultiAgentSearchAgent):
+    """
+    Your minimax agent (par1-1)
+    """
+    def getAction(self, gameState):
+        """
+        Returns the minimax action from the current gameState using self.depth
+        and self.evaluationFunction.
+
+        Here are some method calls that might be useful when implementing minimax.
+
+        gameState.getLegalActions(agentIndex):
+        Returns a list of legal actions for an agent
+        agentIndex=0 means Pacman, ghosts are >= 1
+
+        gameState.getNextState(agentIndex, action):
+        Returns the child game state after an agent takes an action
+
+        gameState.getNumAgents():
+        Returns the total number of agents in the game
+
+        gameState.isWin():
+        Returns whether or not the game state is a winning state
+
+        gameState.isLose():
+        Returns whether or not the game state is a losing state
+        """
+        "*** YOUR CODE HERE ***"
+        # Begin your code
+        actions = gameState.getLegalActions(0)
+        candidates = []
+        for action in actions:
+            candidates.append((action, self.minimax(gameState.getNextState(0, action), self.depth-1, 1, False)))
+        action, _ = max(candidates, key=lambda item: item[1][1])
+        # print(f"action: {action}")
+        return action
+        # End your code
+    def minimax(self, gameState, depth, agentIdx, maximize):
+        if gameState.isWin() or gameState.isLose() or (depth == 0 and agentIdx == 0):
+            return (gameState, self.evaluationFunction(gameState))
+        actions = gameState.getLegalActions(agentIdx)
+        candidates = []
+        if maximize:
+            for action in actions:
+                candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth-1, 1, False))
+            stateScore = max(candidates, key=lambda item: item[1])
+            
+        elif agentIdx < gameState.getNumAgents()-1:
+            for action in actions:
+                candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth, agentIdx+1, False))
+            stateScore = min(candidates, key=lambda item: item[1])
+        else:
+            for action in actions:
+                candidates.append(self.minimax(gameState.getNextState(agentIdx, action), depth, 0, True))
+            stateScore = min(candidates, key=lambda item: item[1])
+        
+        return stateScore
+\end{minted}
+\end{code}
+\subsection{Minimax 與 Expectimax 的比較}
+\section{Q-learning}
+\section{DQN}
+
+
+\end{document}
