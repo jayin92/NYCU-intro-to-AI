@@ -16,7 +16,7 @@ from util import manhattanDistance
 from game import Directions
 import random, util
 
-from game import Agent
+from game import Agent, Actions
 
 class ReflexAgent(Agent):
     """
@@ -201,6 +201,28 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return action
         # End your code
 
+def closestFood(pos, food, walls):
+    """
+    closestFood -- this is similar to the function that we have
+    worked on in the search project; here its all in one place
+    """
+    fringe = [(pos[0], pos[1], 0)]
+    expanded = set()
+    while fringe:
+        pos_x, pos_y, dist = fringe.pop(0)
+        if (pos_x, pos_y) in expanded:
+            continue
+        expanded.add((pos_x, pos_y))
+        # if we find a food at this location then exit
+        if food[pos_x][pos_y]:
+            return dist
+        # otherwise spread out from the location to its neighbours
+        nbrs = Actions.getLegalNeighbors((pos_x, pos_y), walls)
+        for nbr_x, nbr_y in nbrs:
+            fringe.append((nbr_x, nbr_y, dist+1))
+    # no food found
+    return None
+
 def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -210,11 +232,24 @@ def betterEvaluationFunction(currentGameState):
     """
     "*** YOUR CODE HERE ***"
     # Begin your code
-    util.raiseNotDefined()
+    if currentGameState.isLose():
+        return -1e20
+    elif currentGameState.isWin():
+        return 1e20
+    score = currentGameState.getScore()
+    cnt_food = currentGameState.getNumFood()
+    cnt_cap  = len(currentGameState.getCapsules())
+    dis = closestFood(currentGameState.getPacmanPosition(), currentGameState.getFood(), currentGameState.getWalls())
+    val = 1 * score
+    if dis is not None:
+        val -= 10 * dis
+    val -= cnt_food * 100
+    val -= 30 * cnt_cap
+    return val
     # End your code
 
 # Abbreviation
 """
 If you complete this part, please replace scoreEvaluationFunction with betterEvaluationFunction ! !
 """
-better = scoreEvaluationFunction # betterEvaluationFunction or scoreEvaluationFunction
+better = betterEvaluationFunction # betterEvaluationFunction or scoreEvaluationFunction

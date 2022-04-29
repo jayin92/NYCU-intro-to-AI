@@ -91,7 +91,7 @@ class SimpleExtractor(FeatureExtractor):
         # if there is no danger of ghosts then add the food feature
         if not features["#-of-ghosts-1-step-away"] and food[next_x][next_y]:
             features["eats-food"] = 1.0
-
+        features["cnt-food"] = state.getNumFood() / 200
         dist = closestFood((next_x, next_y), food, walls)
         dist_cap = None
         dist_scared = None
