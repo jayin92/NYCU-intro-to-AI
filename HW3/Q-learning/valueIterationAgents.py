@@ -68,19 +68,21 @@ class ValueIterationAgent(ValueEstimationAgent):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
         # Begin your code
-        for t in range(1, self.iterations+1):
-            previous_value = self.values.copy()
+        for _ in range(1, self.iterations+1): #Run self.iteration times of value iteration algorithm
+            previous_value = self.values.copy() # Copy old self.values to avoid overwriting problem when updating the current self.values
             for state in self.mdp.getStates():
-                if self.mdp.isTerminal(state):
+                if self.mdp.isTerminal(state): # If current state is terminal state, then set its value to 0
                     self.values[state] = 0
                     continue
-                maxi_value = -1e9;
-                for action in self.mdp.getPossibleActions(state):
+                maxi_value = -1e9 # Initalize maxi_value to a small value, this variable will track the value of all possible actions
+                for action in self.mdp.getPossibleActions(state): # Iterate all possible action
                     sumOfAllState = 0
-                    for (nextState, prob) in self.mdp.getTransitionStatesAndProbs(state, action):
-                        sumOfAllState += prob * (self.mdp.getReward(state, action, nextState) + self.discount*previous_value[nextState])
-                    maxi_value = max(maxi_value, sumOfAllState)
-                self.values[state] = maxi_value
+                    for (nextState, prob) in self.mdp.getTransitionStatesAndProbs(state, action): # Get all the possible state and their correspoding probability
+                        # Use the main formula of value iteration method to update self.values
+                        # Noticed that I use previous_value to compute the correct update value
+                        sumOfAllState += prob * (self.mdp.getReward(state, action, nextState) + self.discount*previous_value[nextState]) 
+                    maxi_value = max(maxi_value, sumOfAllState) # Taking max over the corresponding value of all possible state
+                self.values[state] = maxi_value # set self.values to the maximum possible value
                 
         # End your code
 
@@ -99,10 +101,10 @@ class ValueIterationAgent(ValueEstimationAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        res = 0
-        for (nextState, prob) in self.mdp.getTransitionStatesAndProbs(state, action):
-            res += prob * (self.mdp.getReward(state, action, nextState) + self.discount*self.values[nextState])
-        return res
+        res = 0 # Initialize q value
+        for (nextState, prob) in self.mdp.getTransitionStatesAndProbs(state, action): # Get all teh possible state and their correspoding probability
+            res += prob * (self.mdp.getReward(state, action, nextState) + self.discount*self.values[nextState]) # Compute q-value using formula
+        return res # return q value
         # End your code
 
     def computeActionFromValues(self, state):
@@ -117,14 +119,14 @@ class ValueIterationAgent(ValueEstimationAgent):
         "*** YOUR CODE HERE ***"
         # Begin your code
         #check for terminal
-        if self.mdp.isTerminal(state):
+        if self.mdp.isTerminal(state): # If this state is a terminal state, then agents can't move. Therefore, return None
             return None
-        actions = self.mdp.getPossibleActions(state)
-        qValues = util.Counter()
+        actions = self.mdp.getPossibleActions(state) # Otherwise, get all possible actions
+        qValues = util.Counter() # Initailze a Counter to track every q value after taking action
         for action in actions:
-            qValues[action] = self.getQValue(state, action)
-        
-        return qValues.argMax()
+            qValues[action] = self.getQValue(state, action) # Using getQValue to get q-value after taking this action
+
+        return qValues.argMax() # argMax will return the key (which is action in this function) that has the highest q-value
         
         # End your code
 

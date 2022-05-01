@@ -50,7 +50,7 @@ class QLearningAgent(ReinforcementAgent):
 
         "*** YOUR CODE HERE ***"
         # Begin your code
-        self.value = defaultdict(lambda: defaultdict(float))
+        self.value = defaultdict(lambda: defaultdict(float)) # Use nested defaultdict to store q-value of given state and action as self.value[state][action]
 
         # End your code
 
@@ -63,7 +63,7 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        return self.value[state][action]
+        return self.value[state][action] # Just return the corresponding q value
         # End your code
 
 
@@ -76,15 +76,15 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        actions = self.getLegalActions(state)
-        if len(actions) == 0:
-            return 0.0
+        actions = self.getLegalActions(state) # Get all legal actions
+        if len(actions) == 0: # If no legal actions
+            return 0.0 # then return 0
         else:
-            q_value = -1e9
+            q_value = -1e9 # Initalize a variable to track the maximum q value of current game state
             for a in actions:
-                q_value = max(q_value, self.getQValue(state, a))
+                q_value = max(q_value, self.getQValue(state, a)) # Get q-value of given state and action, and update the maximum q-value
 
-        return q_value
+        return q_value # return maximum q state
         # End your code
 
     def computeActionFromQValues(self, state):
@@ -95,18 +95,18 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        legalActions = self.getLegalActions(state)
-        action = None
+        legalActions = self.getLegalActions(state) # Get all legal actions
+        action = None # Initalize the variable to track optimal action
         "*** YOUR CODE HERE ***"
         # Begin your code
         if len(legalActions) != 0:
-            q_value = -1e9
+            q_value = -1e9 # Initalize a variable to track maximum q value
             for a in legalActions:
-                if self.getQValue(state, a) > q_value:
+                if self.getQValue(state, a) > q_value: # Update maximum q value and the corresponding action
                     q_value = self.getQValue(state, a)
                     action = a
-                
-        return action
+                 
+        return action # return optimal action
         # End your code
 
     def getAction(self, state):
@@ -125,15 +125,14 @@ class QLearningAgent(ReinforcementAgent):
         action = None
         "*** YOUR CODE HERE ***"
         # Begin your code
-        if util.flipCoin(self.epsilon):
+        if util.flipCoin(self.epsilon): # Implementation of epsilon greedy
             # Random sample
-            if len(legalActions) != 0:
-                action = random.choice(legalActions)
+            if len(legalActions) != 0: # If have legal actions
+                action = random.choice(legalActions) # then randomly select an action
         else:
-            action = self.computeActionFromQValues(state)
+            action = self.computeActionFromQValues(state) # Otherwise, use q value to get the optimal actions of current game state
             
-
-        return action
+        return action # return that action
         # End your code
         
 
@@ -148,6 +147,7 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
+        # Use q-learning update formula to update Q(s, a)
         self.value[state][action] = (1 - self.alpha) * self.value[state][action] + self.alpha * (reward + self.discount * self.computeValueFromQValues(nextState))
         # End your code
 
@@ -218,8 +218,9 @@ class ApproximateQAgent(PacmanQAgent):
         "*** YOUR CODE HERE ***"
         # Begin your code
         # get weights and feature
-        featureVectors = self.featExtractor.getFeatures(state, action)
-        res = 0
+        featureVectors = self.featExtractor.getFeatures(state, action) # Get feature vectors (type = util.Counter()) using getFeatures(state, action)
+        res = 0 # Initalize return value
+        # Dot product of w * featureVector
         for feature in featureVectors:
             res += featureVectors[feature] * self.weights[feature]
         
@@ -232,7 +233,8 @@ class ApproximateQAgent(PacmanQAgent):
         """
         "*** YOUR CODE HERE ***"
         # Begin your code
-        featureVectors = self.featExtractor.getFeatures(state, action)
+        featureVectors = self.featExtractor.getFeatures(state, action) # Get feature vectors (type = util.Counter()) using getFeatures(state, action)
+        # Using ApproximateQLearningAgent's formula to update every weights that corrsponds to a specific feature
         for feature in featureVectors:
             correction = reward + self.discount * self.computeValueFromQValues(nextState) - self.getQValue(state, action)
             self.weights[feature] = self.weights[feature] + self.alpha * correction * featureVectors[feature]
