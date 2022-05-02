@@ -129,7 +129,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
 Instead of taking the minimum value in the min layer. 
 Expectimax algorithm take the expectation value of all possible values.
-In the pacman game, every action taken by the ghosts is same, therefore, the expectation value of all actions equals to the average all of possible score.
+In the pacman game, the probability of every action taken by the ghosts is same. Therefore, the expectation value of all actions equals to the average all of possible score.
 
 The code below implement the expectimax algorithm for the pacman game.
 
@@ -682,7 +682,7 @@ class SimpleExtractor(FeatureExtractor):
 
 Deep Q-learning (DQN) uses a deep neural network to get the optimal action with given game state. In other words, DQN use a neural network to replace the original Q-table. The update process of Q-value turns into the back-propagation of the neural network.
 
-I have trained DQN using the provided code. In the next section, I will compare DQN with other methods I implemented in this homework.
+I have trained DQN using the provided code. The hyperparameters is sett as default. In the next section, I will compare DQN with other methods I implemented in this homework.
 
 
 \section{Comparisons}
@@ -697,7 +697,7 @@ I have trained DQN using the provided code. In the next section, I will compare 
 Mimimax (depth=2)                    & 0.44              & -203.13                 \\
 Mimimax (depth=2,
   betterEvalFn)    & \textbf{1}        & 1154.24                 \\
-Expectimax (depth=2)                 &                   &                         \\
+Expectimax (depth=2)                 &               \textit{TIMEOUT}    &     \textit{TIMEOUT}                    \\
 Expectimax (depth=2,
   betterEvalFn) & \textbf{1}        & \textbf{1176.32}        \\
 Vanilla Q-learning (trained 2000 episodes)                  & 0                 & -405.8                  \\
@@ -710,6 +710,8 @@ DQN (trained 10000 episodes)                                 & 0.92             
 For q-learning method, $\epsilon=0.05, \gamma=0.8, \alpha=0.2$.
 
 As we can see in the table. The best method is Expectimax with search depth equals to 2 and use custom evaluation function I implement as Code \ref{code: betterEval} to evaluate a given state. This method have achieved 100\% win rate and highest average score $1176.32$. I think this is because the human-written evaluation function make agent get more information about current state. Compared with the default evaluation function, which only return the score of given game state.
+
+As for expectimax algorithm with search depth equals to 2. My computer can't run 100 games successfully, I think it's because there is only one ghosts in the game. And without proper evaluation function, the pacman will tend to stay in the same place, thus make the game never end. It also makes my computer out of memory.
 
 We can also notice that two q-learning method, vanilla q-learning and approximate q-learning, have huge difference in both win rate and average score. I think the difference is because vanilla q-learning only update q-value using score of current game state. And for layout like smallClassic that I use for testing each methods, there are too many possible state. This make agent can't find a optimal policy. This will happen even if I adjust $\epsilon$ to $0.5$, making the agent explore more game state. 
 
@@ -724,7 +726,7 @@ Finally, DQN use deep neural network to get optimal action with given state. Alt
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.5\linewidth]{screenshot002}
+\includegraphics[width=0.3\linewidth]{screenshot002}
 \caption{Pacman rushes to the orange ghost and lose the game}
 \label{fig:screenshot002}
 \end{figure}
@@ -735,15 +737,23 @@ But for expectimax algorithm, the pacman doesn't consider the worst case, instea
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.5\linewidth]{screenshot004}
+\includegraphics[width=0.3\linewidth]{screenshot004}
 \caption{Expectimax algorithm successfully wins trappedClassic}
 \label{fig:screenshot004}
 \end{figure}
 
-\section{Conclusion}
+\subsection{Problem Caused by Using Manhattan Distance Instead of BFS}
+In Code \ref{code: betterEval}, I use Manhattan distance instead of BFS to compute the closest capsules and scared ghosts. This is because using BFS to find these two objects is time-consuming. This is because these two kinds of objects are relatively rare on the map. In other words, the probability we find them at the first few step of BFS is very low, which means the average searching time of BFS is high. 
 
-In this homework, I learn how to write minimax, expectimax, q-learning and approximate q-learning algorithm.
+But using Manhattan distance has its own problem. Figure \ref{fig:screenshot005} is an example. Pacman thinks that if it go left, then the distance between it and capsules will decrease. In fact, the distance won't decrease, because there is a wall between it and capsule. Using Manhattan distance can't avoid the problem encountered. But if we consider the time efficiency, using Manhattan distance instead of BFS is still a right choice. 
 
-Pacman game is a great example for testing search algorithm and q-learning algorithm.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\linewidth]{screenshot005}
+\caption{Pacman gets stuck on the wall}
+\label{fig:screenshot005}
+\end{figure}
+
+
 
 \end{document}
