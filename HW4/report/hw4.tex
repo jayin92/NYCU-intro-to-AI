@@ -1,0 +1,194 @@
+\documentclass{article}[12pt]
+\usepackage{fontspec}   %加這個就可以設定字體
+\usepackage{xeCJK}       %讓中英文字體分開設置
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage[newfloat]{minted}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{multirow}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{pifont}
+\usepackage{amssymb}
+
+\usepackage[breakable, listings, skins, minted]{tcolorbox}
+\usepackage{etoolbox}
+\setminted{fontsize=\footnotesize}
+\renewtcblisting{minted}{%
+    listing engine=minted,
+    minted language=python,
+    listing only,
+    breakable,
+    enhanced,
+    minted options = {
+        linenos, 
+        breaklines=true, 
+        breakbefore=., 
+        % fontsize=\footnotesize, 
+        numbersep=2mm
+    },
+    overlay={%
+        \begin{tcbclipinterior}
+            \fill[gray!25] (frame.south west) rectangle ([xshift=4mm]frame.north west);
+        \end{tcbclipinterior}
+    }   
+}
+
+\usepackage[
+  top=2cm,
+  bottom=2cm,
+  left=3.5cm,
+  right=3.5cm,
+  headheight=17pt, % as per the warning by fancyhdr
+  includehead,includefoot,
+  heightrounded, % to avoid spurious underfull messages
+]{geometry} 
+
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\SetupFloatingEnvironment{listing}{name=Code}
+
+
+\title{Introduction to Artificial Intelligence HW4 Report}
+\author{110550088 李杰穎}
+\date{\today}
+
+\setCJKmainfont{Noto Serif CJK TC}
+\setmonofont[Mapping=tex-text]{Consolas}
+
+\XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
+\XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
+
+\setlength{\parindent}{0em}
+\setlength{\parskip}{2em}
+\renewcommand{\baselinestretch}{1.5}
+\begin{document}
+
+\maketitle
+
+\section{Attention Mechanism of BERT}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/exbert}
+	\caption[]{Screenshot of ExBERT. \footnotemark}
+	\label{fig:exbert}
+\end{figure}
+\footnotetext{From original paper \url{https://arxiv.org/pdf/1910.05276.pdf}}
+
+BERT (Bidirectional Encoder Representation for Transformers) is an NLP model based on transformers. BERT is pre-trained on two tasks, masked language model and next sentence prediction. 
+
+Masked language model is a task that language model needs to predict the masked word. For example, in following sentence, ``The man went to the [MASK] to buy a [MASK] of milk.'' There are two words being masked. BERT needs to predict that those two masked words are ``store'' and ``gallon'', respectively.
+
+Next sentence prediction is a task that model will be given two sentences, let's say sentence A and B. It needs to tell us is B the next sentence of A.
+
+In this section, I will use \href{https://exbert.net}{ExBERT}, a visualizing tool for different variances of BERT, including \texttt{bert-base-cased} and \texttt{distilbert-based-uncased}, to understand the attention mechanisms of BERT.
+
+
+\subsection{Using BERT as Masked Language Model}
+
+Masked Language Model (MLM) is a task that its input is a sentence with part of words being masked. The goal of language model is to predict the masked words using the context of 
+sentence. 
+
+In this section, I will use $\text{BERT}_{\text{base}}$ as language model.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert1}
+	\caption{Using the sentence ``The girl ran to a local pub to escape the din of her city.'' and mask the word ``escape''.}
+	\label{fig:exbert1}
+\end{figure}
+
+As we can see in \autoref{fig:exbert1}, if we mask the word ``escape'' and let BERT predict which word should appear here. In layer 9 of BERT, the words that get attention are ``ran'', ``to'' and ``din''.  These words are exactly the words that is relevance with the masked word ``escape''. This is an example of attention mechanism.
+
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert2}
+	\caption{Using the sentence ``Jay is an undergraduate student in NYCU. He is interested in photography.'' and mask the word ``He''.}
+	\label{fig:exbert2}
+\end{figure}
+
+Another example is shown as \autoref{fig:exbert2}. I mask the subject and see how BERT know what word should be filled in. As a normal human would do. BERT pay its attention on the subject of the first sentence, which is my name ``Jay''. We can also observe that ``He'' has the highest chance to appear in the masked position. This also shows that BERT knows Jay is usually the name of a male.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert3}
+	\caption{Using the sentence ``Jay tells Mary that he has already figured out how to solve the question that she asked him.'' and mask ``she'' and ``him'' in the second sentence.}
+	\label{fig:exbert3}
+\end{figure}
+
+The last example is to show that BERT is able to know that who does a specific pronoun refer to. As we can see in the \autoref{fig:exbert3}, BERT pays its attention at ``Mary" when it predict the masked word, instead of ``Jay''. This shows that BERT can analysis the grammar structure in the sentence and know which word should be paid attention at.
+
+In conclusion, the examples above show that how attention mechanism work in BERT. And indeed, this mechanism helps BERT perform better compared with other methods like n-gram model or ELMo.
+
+\section{Comparison of BERT and DistilBERT}
+
+DistilBERT is smaller version of BERT. The basic idea of DistilBERT is to use a light-weight model architecture to ``mimic'' the behavior of the original BERT. The author of DistilBERT claimed that this method can ``reduce the size of a BERT by 40\%, while retaining 97\% of its language understanding capabilities and being 60\% faster.''\footnote{From abstract of original paper. \url{https://arxiv.org/abs/1910.01108}}
+
+In ExBERT, we can use both \texttt{bert-base-cased} and \texttt{distilbert-base-uncased}. Thus, we will also use ExBERT to compare these two model.
+
+To compare DistilBERT with BERT. I use the same three sentences as in previous section. Below are the experiments results. Noticed that these results are all from layer 3 of DistilBERT. This is because after some observations, I think this is layer that DistilBERT pay attention to the context of sentence. Other layers are paying attention to either the previous word or the next word or the [CLS] tag.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert-distil1}
+	\caption{Using the sentence ``The girl ran to a local pub to escape the din of her city.'' and mask the word ``escape''.}
+	\label{fig:exbert-distil1}
+\end{figure}
+
+As we can see in \autoref{fig:exbert-distil1}, DistilBERT is able to predict correctly, and the words it pays attention to is similar to those BERT pays attention to. This shows that DistilBERT learn some ``knowledges'' from the original BERT.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert-distil2}
+	\caption{Using the sentence ``Jay is an undergraduate student in NYCU. He is interested in photography.'' and mask the word ``He''.}
+	\label{fig:exbert-distil2}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert-distil4}
+	\caption{The matched word summary of DistilBERT using the sentence ``Jay is an undergraduate student in NYCU. He is interested in photography.'' and mask the word ``He''.}
+	\label{fig:exbert-distilbert-embedding}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert-distil5}
+	\caption{The matched word summary of BERT using the sentence ``Jay is an undergraduate student in NYCU. He is interested in photography.'' and mask the word ``He''.}
+	\label{fig:exbert-bert-embedding}
+\end{figure}
+
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/exbert-distil3}
+	\caption{Using the sentence ``Jay tells Mary that he has already figured out how to solve the question that she asked him.'' and mask ``she'' and ``him'' in the second sentence.}
+	\label{fig:exbert-distil3}
+\end{figure}
+
+But if we look at more complicate examples, like sentences in \autoref{fig:exbert-distil2} and \autoref{fig:exbert-distil3}, DistilBERT can't predict the masked word as well as original BERT can do.
+
+Let's first look at \autoref{fig:exbert-distil2}. DistilBERT can predict that the masked word can be the name ``Jay'' or ``He''. Although both of these is correct answer and model knows that Jay is a male name. But the better answer is ``He'', which is closer to daily English usage. But DistilBERT only has 3\% of probability to fill ``He'' here. This shows that DistilBERT perform worse than original BERT. We can also use ``by Embedding'' to see the matched word. Furthermore, \autoref{fig:exbert-distilbert-embedding} shows that the matched word summary in the last layer of DistilBERT. In contrast, \autoref{fig:exbert-bert-embedding} shows that the matched word summary in the last layer of BERT. We can see that BERT matched more pronoun than DistilBERT does, which is a better matched compared with proper noun. This also shows the difference between BERT and DistilBERT.
+
+\autoref{fig:exbert-distil3} is the last example. Compared with the result shown in \autoref{fig:exbert3}, DistilBERT's prediction is completely wrong, the most possible word is ``Jay'', which is the last word should be filled in. This example shows that there has a significant performance difference between BERT and DistilBERT.
+
+\section{Comparison of the Explanation of LIME and SHAP}
+
+\section{Implementation of Other Explanation Technique}
+
+\section{Attack NLP Model}
+
+\section{Encountered Problems}
+
+
+\end{document}
