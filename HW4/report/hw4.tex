@@ -67,9 +67,9 @@
 \XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
 \XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
 
-\setlength{\parindent}{0em}
+% \setlength{\parindent}{2em}
 \setlength{\parskip}{2em}
-\renewcommand{\baselinestretch}{1.5}
+\renewcommand{\baselinestretch}{1.25}
 \begin{document}
 
 \maketitle
@@ -154,18 +154,23 @@ As we can see in \autoref{fig:exbert-distil1}, DistilBERT is able to predict cor
 	\label{fig:exbert-distil2}
 \end{figure}
 
-\begin{figure}
-	\centering
-	\includegraphics[width=0.7\linewidth]{figure/exbert-distil4}
-	\caption{The matched word summary of DistilBERT using the sentence ``Jay is an undergraduate student in NYCU. He is interested in photography.'' and mask the word ``He''.}
-	\label{fig:exbert-distilbert-embedding}
-\end{figure}
 
-\begin{figure}
+\begin{figure}[htbp]
 	\centering
-	\includegraphics[width=0.7\linewidth]{figure/exbert-distil5}
-	\caption{The matched word summary of BERT using the sentence ``Jay is an undergraduate student in NYCU. He is interested in photography.'' and mask the word ``He''.}
-	\label{fig:exbert-bert-embedding}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure/exbert-distil4}
+		\caption{DistilBERT}
+		\label{fig:exbert-distilbert-embedding}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{figure/exbert-distil5}
+		\caption{BERT}
+		\label{fig:exbert-bert-embedding}
+	\end{subfigure}
+	\caption{The matched word summary of the sentence ``Jay is an undergraduate student in NYCU. He is interested in photography.'' and mask the word ``He''.}
 \end{figure}
 
 
@@ -178,13 +183,55 @@ As we can see in \autoref{fig:exbert-distil1}, DistilBERT is able to predict cor
 
 But if we look at more complicate examples, like sentences in \autoref{fig:exbert-distil2} and \autoref{fig:exbert-distil3}, DistilBERT can't predict the masked word as well as original BERT can do.
 
-Let's first look at \autoref{fig:exbert-distil2}. DistilBERT can predict that the masked word can be the name ``Jay'' or ``He''. Although both of these is correct answer and model knows that Jay is a male name. But the better answer is ``He'', which is closer to daily English usage. But DistilBERT only has 3\% of probability to fill ``He'' here. This shows that DistilBERT perform worse than original BERT. We can also use ``by Embedding'' to see the matched word. Furthermore, \autoref{fig:exbert-distilbert-embedding} shows that the matched word summary in the last layer of DistilBERT. In contrast, \autoref{fig:exbert-bert-embedding} shows that the matched word summary in the last layer of BERT. We can see that BERT matched more pronoun than DistilBERT does, which is a better matched compared with proper noun. This also shows the difference between BERT and DistilBERT.
+Let's first look at \autoref{fig:exbert-distil2}. DistilBERT can predict that the masked word can be the name ``Jay'' or ``He''. Although both of these is correct answer and model knows that Jay is a male name. But the better answer is ``He'', which is closer to daily English usage. But DistilBERT only has 3\% of probability to fill ``He'' here. This shows that DistilBERT perform worse than original BERT. 
+
+Furthermore, we can also use the ``by Embedding'' button to see the matched word. \autoref{fig:exbert-distilbert-embedding} shows that the matched word summary in the last layer of DistilBERT. In contrast, \autoref{fig:exbert-bert-embedding} shows that the matched word summary in the last layer of BERT. We can see that BERT matched more pronoun than DistilBERT does, which is a better matched compared with proper noun. This also shows the difference between BERT and DistilBERT.
 
 \autoref{fig:exbert-distil3} is the last example. Compared with the result shown in \autoref{fig:exbert3}, DistilBERT's prediction is completely wrong, the most possible word is ``Jay'', which is the last word should be filled in. This example shows that there has a significant performance difference between BERT and DistilBERT.
 
-\section{Comparison of the Explanation of LIME and SHAP}
+In conclusion, although DistilBERT can predict words correctly in some simple sentences, but if the sentences are too complicate, DistilBERT may not perform very well.
 
-\section{Implementation of Other Explanation Technique}
+\section{Explainable AI: LIME and SHAP}
+
+Nowadays, people have trained lots of AI models to do various of tasks. But most of these models are black boxes, we don't know how machine makes its decision. This makes us hard to trust the prediction of machine. Even worse, if the models make some wrong decision, it's nearly impossible to debug those AI models. Therefore, we need to conceive methods to explain behavior of AI models. In this section, I will discuss two methods that can explain AI models. One of them is local interpretable model-agnostic explanations (LIME) and another is shapley additive explanations (SHAP).
+
+\subsection{Local Interpretable Model-agnostic Explanations (LIME)}
+
+LIME is an method to explain AI model. Its name clearly shows its properties.
+
+\begin{enumerate}
+	\item \textbf{Local}: LIME explain the given prediction locally.
+	\item \textbf{Interpretable}: The explanation given by LIME is easy enough for human to understand.
+	\item \textbf{Model-agnostic}: Treat the model as a black box so that LIME works on every model.
+\end{enumerate}
+
+Given a prediction we want to explain, LIME first creates a datasets by perturbed the given input. Then it uses this datasets to train a simple (often a linear classifier) and explainable classifier. The performance of this classifier need to be good enough on the new datasets. In this way, we can achieved the so-called ``local fidelity''. \autoref{fig:lime-classifier} illustrates above procedures. $g(z')$ is the classifier we want to train.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=0.7\linewidth]{figure/lime-classifier}
+	\caption[]{How LIME works.\footnotemark}
+	\label{fig:lime-classifier}
+\end{figure}
+\footnotetext{From \url{https://reurl.cc/3o4YE8}}
+
+We can noticed that LIME only works on a single prediction. We can't get a global explanation using LIME. On the contrast, the next method I will introduce works both on local and global explanation.
+
+\subsection{Shapley Additive Explanations (SHAP)}
+
+SHAP is an method based on Shapley value. Shapley value is first proposed by an American mathematician Lloyd Stowell Shapley. Shapley value can be used to compute the contribution to the final output of model for a given feature. The following equation is for computing the Shapley value for a given feature $j$.
+
+\begin{equation}
+\phi_{i}=\sum_{S \subseteq F \backslash\{i\}} \frac{|S| !(|F|-|S|-1) !}{|F| !}\left[f_{S \cup\{i\}}\left(x_{S \cup\{i\}}\right)-f_{S}\left(x_{S}\right)\right]
+\end{equation}
+
+Where $F$ is all the features used to build the model. $f_{S}(x_{S})$ is the output of the model trained with feature set $S$.\footnote{For detailed explanation, please refer to the original paper or this article. \url{https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html}}
+
+We can also noticed that SHAP deals with features, it can also give the global explanation. In the next subsection, I will compare the local explanation given by LIME and SHAP. And I will also show the global explanation given by SHAP using the IMDB datasets.
+
+\subsection{Explanation of LIME and SHAP}
+
+\section{Other Explanation Technique}
 
 \section{Attack NLP Model}
 
