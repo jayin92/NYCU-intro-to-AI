@@ -67,7 +67,7 @@
 \XeTeXlinebreaklocale "zh"             %這兩行一定要加，中文才能自動換行
 \XeTeXlinebreakskip = 0pt plus 1pt     %這兩行一定要加，中文才能自動換行
 
-% \setlength{\parindent}{2em}
+\setlength{\parindent}{0em}
 \setlength{\parskip}{2em}
 \renewcommand{\baselinestretch}{1.25}
 \begin{document}
@@ -136,7 +136,7 @@ DistilBERT is smaller version of BERT. The basic idea of DistilBERT is to use a 
 
 In ExBERT, we can use both \texttt{bert-base-cased} and \texttt{distilbert-base-uncased}. Thus, we will also use ExBERT to compare these two model.
 
-To compare DistilBERT with BERT. I use the same three sentences as in previous section. Below are the experiments results. Noticed that these results are all from layer 3 of DistilBERT. This is because after some observations, I think this is layer that DistilBERT pay attention to the context of sentence. Other layers are paying attention to either the previous word or the next word or the [CLS] tag.
+To compare DistilBERT with BERT. I use the same three sentences as in previous section and mask same words. Below are the experiments results. Noticed that these results are all from layer 3 of DistilBERT. This is because after some observations, I think this is layer that DistilBERT pay attention to the context of sentence. Other layers are paying attention to either the previous word or the next word or the [CLS] tag.
 
 \begin{figure}[htbp]
 	\centering
@@ -187,7 +187,7 @@ Let's first look at \autoref{fig:exbert-distil2}. DistilBERT can predict that th
 
 Furthermore, we can also use the ``by Embedding'' button to see the matched word. \autoref{fig:exbert-distilbert-embedding} shows that the matched word summary in the last layer of DistilBERT. In contrast, \autoref{fig:exbert-bert-embedding} shows that the matched word summary in the last layer of BERT. We can see that BERT matched more pronoun than DistilBERT does, which is a better matched compared with proper noun. This also shows the difference between BERT and DistilBERT.
 
-\autoref{fig:exbert-distil3} is the last example. Compared with the result shown in \autoref{fig:exbert3}, DistilBERT's prediction is completely wrong, the most possible word is ``Jay'', which is the last word should be filled in. This example shows that there has a significant performance difference between BERT and DistilBERT.
+\autoref{fig:exbert-distil3} is the last example. Compared with the result shown in \autoref{fig:exbert3}, DistilBERT's prediction is completely wrong, the most possible word is ``Jay'', which is the last word to be filled in. This example shows that there has a significant performance difference between BERT and DistilBERT.
 
 In conclusion, although DistilBERT can predict words correctly in some simple sentences, but if the sentences are too complicate, DistilBERT may not perform very well.
 
@@ -210,7 +210,7 @@ Given a prediction we want to explain, LIME first creates a datasets by perturbe
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[width=0.7\linewidth]{figure/lime-classifier}
-	\caption[]{How LIME works.\footnotemark}
+	\caption[]{A simple classifier.\footnotemark}
 	\label{fig:lime-classifier}
 \end{figure}
 \footnotetext{From \url{https://reurl.cc/3o4YE8}}
@@ -229,7 +229,167 @@ Where $F$ is all the features used to build the model. $f_{S}(x_{S})$ is the out
 
 We can also noticed that SHAP deals with features, it can also give the global explanation. In the next subsection, I will compare the local explanation given by LIME and SHAP. And I will also show the global explanation given by SHAP using the IMDB datasets.
 
-\subsection{Explanation of LIME and SHAP}
+\subsection{Explanations Given by LIME and SHAP}
+
+Before using the sentences from IMDB Datasets to test LIME and SHAP. Let's first look at some simpler sentences. And also, I will test two models given by TAs, which are \texttt{distilbert-base-uncased} and \texttt{prajjwal1/bert-small}. And because these two models are trained on IMDB datasets to classify the sentiment of given movie review. Therefore, the sentences that I will test in experiments all express strong sentiments.
+
+\subsubsection{Using Simple Sentences}
+
+I will use four sentences 
+
+\begin{enumerate}
+	\item It was a fantastic performance!
+	\item That is a terrible movie.
+	\item This movie is a must-see.
+	\item This movie really brings art to a new level.	
+\end{enumerate}
+
+Below is the explanation of four sentences given by LIME and SHAP. Model used here is \texttt{distilbert-base-uncased}.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-simple-1}
+	\caption{The explanation of first sentence given by LIME.}
+	\label{fig:lime-simple-1}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-simple-1}
+	\caption{The explanation of first sentence given by SHAP.}
+	\label{fig:shap-simple-1}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-simple-2}
+	\caption{The explanation of second sentence given by LIME.}
+	\label{fig:lime-simple-2}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-simple-2}
+	\caption{The explanation of second sentence given by SHAP.}
+	\label{fig:shap-simple-2}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-simple-3}
+	\caption{The explanation of third sentence given by LIME.}
+	\label{fig:lime-simple-3}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-simple-3}
+	\caption{The explanation of third sentence given by SHAP.}
+	\label{fig:shap-simple-3}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-simple-4}
+	\caption{The explanation of fourth sentence given by LIME.}
+	\label{fig:lime-simple-4}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-simple-4}
+	\caption{The explanation of fourth sentence given by SHAP.}
+	\label{fig:shap-simple-4}
+\end{figure}
+
+As we can see from \autoref{fig:lime-simple-1} to \autoref{fig:shap-simple-4}, both LIME and SHAP can explain the prediction very well. Both method can give us the contribution of each word to the result. Even a harder sentence like the third and fourth sentences (\autoref{fig:lime-simple-3} to \autoref{fig:shap-simple-4}), which doesn't mention any sentimental word, both methods can know that ``brings art to a new level'' and ``must-see'' has positive meaning and is important to the final prediction.
+
+\subsubsection{Using Sentences from IMDB Datasets}
+
+In this section, I will use the reviews in test set of IMDB Datasets. I've picked four reviews, I will list them below. The first and second reviews are positive samples and rest of them are negative samples.
+
+\begin{enumerate}
+	\footnotesize
+	\item I bought the DVD a long time ago and finally got around to watching it.I really enjoyed watching this film as you don't get the chance to see many of the more serious better quality bollywood films like this. Very well done and but I would say you need to pay attention to what is going on as it is easy to get lost. When you start watching the movie, don't do anything else! I would actually advise people to read all the reviews here...including the ones with spoilers, before watching the movie. Raima Sen gave her first great performance that I have seen. Aishwarya was easily at her best. All performances were strong, directing and cinematography...go watch it!
+	\item A ghost story on a typical Turkish high school with nice sound and visual effects. Taylan biraderler(taylan brothers) had made their first shots on a tv-show a couple of years ago, as far as i know. That was kind of a Turkish X-Files, they had very nice stories but lacked on visual effects. This time it seems they had what they needed and used them well. This movie will make you laugh that's for sure, and as well it might have you scared. It has a nice plot and some young, bright actors in it. If you are a high school student in Turkey you will find so many things about you here. There are many clues in the movie about its story and ending, some you understand at the moment, some will make sense afterwords, the dialogs were written very cleverly. So these make the movie one of the best Turk movies made in the last years. Do not forget, this movie is the first of its kind in the Turkish film industry.
+	\item This movie is so unreal. French movies like these are just waste of time. Why watch this movie? Even, I did not know..why. What? The well known sex scene of half-siblings? Although the sex scene is so real and explicit, but the story it is based upon is so unreal. What is the use of it, then? Can you find easily in life, half sibling doing such things?<br /><br />Did I learn something from this movie? Yeah: some people are just so fond of wasting time making such movies, such stories, such non-sense. But for those who like nihilism, nothingness in life, or simply a life without hope, then there you are.. you've got to see this movie.<br /><br />Only one worth adoring, though: CATHERINE DENEUVE. She's such a strikingly beautiful woman.
+	\item I saw this with high expectations. Come on, it is Akshay Kumar, Govinda, and Paresh Rawal, who are all amazing at their comedy, I was really hoping for a laugh riot. Sadly, that is not what I got at all...<br /><br />Unfortunately, nothing in this movie really made me laugh out loud. There were times when I chuckled at one or two things, but nothing really made me laugh. In short, it was badly attempted comedy, and in a way, a bit of a Hera Pheri wannabe.<br /><br />Out of the three main guys, I think Paresh Rawal's role was the most powerful. It wasn't the biggest role, but it certainly stood out more than Govinda or Akshay. Their performances were okay I guess. Nothing special, just mediocre. Though Govinda stole the limelight from Akshay in more than a few scenes. Lara Dutta and Tanushree Dutta also make appearances in this film, and both of them were pretty bad. Lara's role did not move me, or make me laugh, and Tanushree Dutta's character just got on my nerves! The music seems to be the only good thing about Bhagam Bhag. My favourite song is "Tere Bin", followed by "Afreen", which I really liked. "Signal" and the title song "Bhagam Bhag" are also worth a listen.<br /><br />You either will like it or you won't. And judging by the poor comedy and lack of direction, I don't think you will.
+	
+\end{enumerate}
+
+Below is the explanation of four reviews given by LIME and SHAP. Model used here is also \texttt{distilbert-base-uncased}. 
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-imdb-1}
+	\caption{The explanation of first review given by LIME.}
+	\label{fig:lime-imdb-1}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-imdb-2}
+	\caption{The explanation of second review given by LIME.}
+	\label{fig:lime-imdb-2}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-imdb-3}
+	\caption{The explanation of third review given by LIME.}
+	\label{fig:lime-imdb-3}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-imdb-4}
+	\caption{The explanation of fourth review given by LIME.}
+	\label{fig:lime-imdb-4}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-imdb-1}
+	\caption{The explanation of first review given by SHAP.}
+	\label{fig:shap-imdb-1}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-imdb-2}
+	\caption{The explanation of second review given by SHAP.}
+	\label{fig:shap-imdb-2}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-imdb-3}
+	\caption{The explanation of third review given by SHAP.}
+	\label{fig:shap-imdb-3}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/shap-imdb-4}
+	\caption{The explanation of fourth review given by SHAP.}
+	\label{fig:shap-imdb-4}
+\end{figure}
+
+As we can observe in \autoref{fig:lime-imdb-1} to \autoref{fig:shap-imdb-4}. Although LIME and SHAP both can explain short sentence really well. However, when it comes to the explanation of long sentences like movie reviews in IMDB datasets, explanation given by LIME are worse than those given by SHAP. LIME can only marked some single words instead of whole sentence like SHAP give us. To be worse, some words that LIME marked are unreasonable. For example, like in \autoref{fig:lime-imdb-3}, LIME marked the last word ``woman'', and said that it's contribution to the negative prediction is second high among all the words, which is absolutely wrong. On the contrary, \autoref{fig:shap-imdb-3} shows the explanation of third review given by SHAP. As we can see, this explanation is way better than LIME gives. It marks the word by phrases and those which get high Shapley value are indeed the main reason why this review is negative. It can also mark the positive part of a negative review. Therefore, I think SHAP is a better explanation techniques than LIME when it comes to sentimental classification.
+
+And I think the reason why LIME's explanation of long sentences is worse than short sentence is mainly because LIME treats every word in the review as a feature. Therefore, if there are too many features (like in movie review), it's very hard to generate a stable perturbed datasets. And also, we can't train a simple classifier to approximate the original model.
+
+Another disadvantage of LIME is that LIME generates the perturbed datasets randomly. Therefore, the explanation given by LIME is different. \autoref{fig:lime-imdb-random} shows this effect. I input same review in \autoref{fig:lime-imdb-1}, but the final explanation is completely different.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/lime-imdb-random}
+	\caption{The randomness in explanation give by LIME.}
+	\label{fig:lime-imdb-random}
+\end{figure}
+
+In conclusion, I personally think that SHAP is a better explanation technique than LIME.
+
 
 \section{Other Explanation Technique}
 
