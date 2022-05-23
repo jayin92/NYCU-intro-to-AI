@@ -18,3 +18,9 @@
 - Q-learning
 - Approximate Q-learning
 - Deep Q-learning
+
+### HW4
+- Explanable AI (XAI)
+- LIME
+- SHAP
+- Attack NLP
