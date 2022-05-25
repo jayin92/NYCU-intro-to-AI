@@ -227,7 +227,7 @@ SHAP is an method based on Shapley value. Shapley value is first proposed by an 
 
 Where $F$ is all the features used to build the model. $f_{S}(x_{S})$ is the output of the model trained with feature set $S$.\footnote{For detailed explanation, please refer to the original paper or this article. \url{https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html}}
 
-We can also noticed that SHAP deals with features, it can also give the global explanation. In the next subsection, I will compare the local explanation given by LIME and SHAP. And I will also show the global explanation given by SHAP using the IMDB datasets.
+We can also noticed that SHAP deals with features, it can also give the global explanation.
 
 \subsection{Explanations Given by LIME and SHAP}
 
@@ -391,11 +391,126 @@ Another disadvantage of LIME is that LIME generates the perturbed datasets rando
 In conclusion, I personally think that SHAP is a better explanation technique than LIME.
 
 
-\section{Other Explanation Technique}
-
 \section{Attack NLP Model}
+
+In this section, I will try to attack the model that TAs give. I will mainly use the first model which is \texttt{distilbert-base-uncased}.
+
+\subsection{Testing sentences that doesn't have sentiment in it}
+Let's first look at a simple example, ``This is an ordinary movie.''. This example doesn't have obvious sentiment in it. But as we can see in \autoref{fig:attack-1}, model predicts that it's negative. I don't know it's because the IMDB datasets doesn't have these examples that doesn't have obvious sentiment in it or it's model think ``ordinary'' is a negative word. 
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-1}
+	\caption{The explanation of first example given by LIME and SHAP.}
+	\label{fig:attack-1}
+\end{figure}
+
+And the second example I want to show is ``This is a movie about woman''. This example doesn't have obvious sentiment in it, too. But if we look at \autoref{fig:attack-2}, the model says that it's negative. To my surprise, if we change ``woman'' with ``man'' or ``doctor'' as in \autoref{fig:attack-3} and \autoref{fig:attack-4}. The model think that this sentence becomes positive. I also don't know why this attack will work. In theory, model should treat these sentence as same because it doesn't have significant sentiment in it. But in reality, it's not what model works. To solve this problem, I think the datasets should add more sentences like these.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-2}
+	\caption{The explanation of second example given by LIME and SHAP.}
+	\label{fig:attack-2}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-3}
+	\caption{Changing ``woman'' to ``man''.}
+	\label{fig:attack-3}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-4}
+	\caption{Changing ``woman'' to ``doctor''.}
+	\label{fig:attack-4}
+\end{figure}
+
+
+\subsection{Misspelling}
+
+As we can see in \autoref{fig:attack-5}, if we misspell ``bad'' as ``had'', our model thinks that it has 0.77 probability to be positive. Therefore, I think that it's a successful attack.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-5}
+	\caption{Using the sentence ``This movie is had.'' to attack BERT.}
+	\label{fig:attack-5}
+\end{figure}
+
+Another using misspelling to attack BERT is shown as \autoref{fig:attack-6}. I misspell ``good'' as ``goood''. Although I only add a single ``o'' in good. The output of BERT change from 100\% positive to 100\% negative. Therefore, it's also a successful attack.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-7}
+	\caption{The original sentence.}
+	\label{fig:attack-7}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-6}
+	\caption{Misspell ``good'' as ``goood''.}
+	\label{fig:attack-6}
+\end{figure}
+
+\subsection{Other method}
+
+The strategy I use in \ to attack BERT is to put as many negative word in the sentence, but the final sentiment is positive. As we can see, this strategy works. The model thinks that 91\% change that this sentence is negative.
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/attack-8}
+	\caption{Using the sentence ``This is an action movie about bad guy. The overall movie is great, though the performance of main actor is pretty bad.'' to attack BERT.}
+	\label{fig:attack-8}
+\end{figure}
+
+
+\subsection{Using \texttt{textattack} package}
+
+``TextAttack is a Python framework for adversarial attacks, data augmentation, and model training in NLP.''\footnote{From its Github \url{https://github.com/QData/TextAttack}}
+
+We can use this package to attack BERT model. For IMDB dataset, TextAttack has provided us the sample code. This code will first use \texttt{transformers} package to download pretrained model and IMDB datasets, then it randomly picks 20 samples to attack. And the attack strategy used here is \texttt{TextFoolerJin2019}, this is the method from ``Is BERT Really Robust? A Strong Baseline for Natural Language Attack on Text Classification and Entailment''\footnote{\url{https://arxiv.org/abs/1907.11932}}. This strategy is to swap the word with 50 closest embedding nearest neighbors. This method successfully attack 19 sample in 20 sample. Below are two samples that attack successfully.
+
+\begin{code}
+\captionof{listing}{Code for attacking BERT}
+\begin{minted}
+import transformers
+import textattack
+model = transformers.AutoModelForSequenceClassification.from_pretrained("textattack/bert-base-uncased-imdb")
+tokenizer = transformers.AutoTokenizer.from_pretrained("textattack/bert-base-uncased-imdb")
+model_wrapper = textattack.models.wrappers.HuggingFaceModelWrapper(model, tokenizer)
+
+dataset = textattack.datasets.HuggingFaceDataset("imdb", split="test")
+attack = textattack.attack_recipes.TextFoolerJin2019.build(model_wrapper)
+# Attack 20 samples with CSV logging and checkpoint saved every 5 interval
+attack_args = textattack.AttackArgs(num_examples=20, log_to_csv="log.csv", checkpoint_interval=5, checkpoint_dir="checkpoints", disable_stdout=True)
+attacker = textattack.Attacker(attack, dataset, attack_args)
+attacker.attack_dataset()
+\end{minted}
+\end{code}
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[width=\linewidth]{figure/textattack}
+	\caption{Two example that attack successfully. (words that has [[]] are the word being swapped)}
+	\label{fig:textattack}
+\end{figure}
+
 
 \section{Encountered Problems}
 
+\subsection{Movie review contain both ' and "}
+When using long movie review to test model, the review may contain both ' and ". Therefore, we can't use normal "" or '' to declare a string, instead, we will need to use triple quotes to create a string. This can also avoid some problem if the review has $\backslash$n or other escape characters. 
+
+\subsection{Can't find CUDA library}
+I run jupyter notebook on a workstation, and I don't know why notebook doesn't get the installation path of CUDA. Therefore, I just add \texttt{!export LD\_LIBRARY\_PATH="/usr/local/cuda/lib64/"} to set environment variable before importing \texttt{textattack} package. And this solve the problem I encounter.
+
+\subsection{Can't use \texttt{textattack} package to attack TA's model directly}
+
+If I use TA's model to create a model wrapper and try to attack this model. The error \texttt{RuntimeError: Could not infer dtype of tokenizers.Encoding} occurs. I don't know the meaning of this error. But I guess that it may relate to datasets. Because the datasets that is going to use to attack the model is loaded via \texttt{transformers} package. Therefore, it may be incompatible with the model TA gives.
 
 \end{document}
