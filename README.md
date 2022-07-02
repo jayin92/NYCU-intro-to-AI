@@ -1,4 +1,7 @@
 # NYCU-intro-to-AI
+
+110 下 彭文志 - 人工智慧概論 作業 source code
+
 ## Homework
 ### HW 0
 - Basic OpenCV
